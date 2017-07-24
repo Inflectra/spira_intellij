@@ -45,41 +45,7 @@ public class Test {
   }
 
   private void rest() throws Exception {
-    /*InputStream inputStream = SpiraTeamUtil.httpGet("https://demo.spiraservice.net/peter-inflectra/services/v5_0/RestService.svc/" +
-                                                    "requirements?username=administrator&api-key={AFF91DC8-5C47-4BA4-82C6-C2A971B6F4EB}");
-    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-    Gson gson = new Gson();
-    JsonReader jsonReader = new JsonReader(reader);
-    ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
-    for (LinkedTreeMap map : list) {
-      System.out.println(map.get("Name"));
-    }*/
-
-    /*String data = "[{\"PropertyName\": \"OwnerId\", \"IntValue\": 1}, {\"PropertyName\": \"IncidentStatusId\", \"IntValue\": -2}]";
-    InputStream postInputStream = SpiraTeamUtil.httpPost("https://demo.spiraservice.net/peter-inflectra/services" +
-    "/v5_0/RestService.svc/projects/1/incidents/search?start_row=1&number_rows=1000&sort_by=Priority" +
-    "&username=administrator&api-key={AFF91DC8-5C47-4BA4-82C6-C2A971B6F4EB}", data);
-    BufferedReader postReader = new BufferedReader(new InputStreamReader(postInputStream));
-    Gson gson = new Gson();
-    JsonReader postJsonReader = new JsonReader(postReader);
-    ArrayList<LinkedTreeMap> postList = gson.fromJson(postJsonReader, ArrayList.class);
-    for (LinkedTreeMap map : postList) {
-      System.out.println(map.get("Name"));
-    }*/
-
     SpiraTeamUtil.getAssignedIncidents(credentials);
-
-  }
-
-  private void credentials() {
-    SpiraTeamCredentials credentials = SpiraTeamCredentials.loadCredentials();
-    System.out.println(credentials);
-    credentials.setUrl("https://demo.spiraservice.net/peter-inflectra");
-    credentials.setUsername("administrator");
-    credentials.setToken("{AFF91DC8-5C47-4BA4-82C6-C2A971B6F4EB}");
-    credentials.saveCredentials();
-    credentials = SpiraTeamCredentials.loadCredentials();
-    System.out.println(credentials);
   }
 
   private void json() {

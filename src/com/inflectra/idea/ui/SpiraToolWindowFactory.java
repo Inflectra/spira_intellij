@@ -29,9 +29,7 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.treeStructure.PatchedDefaultMutableTreeNode;
 import com.intellij.ui.treeStructure.Tree;
-import com.sun.javafx.tk.Toolkit;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -46,14 +44,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SpiraToolWindowFactory implements ToolWindowFactory {
   private JBPanel panel;
-  private Tree incidents;
-  private Tree requirements;
-  private Tree tasks;
-  private Tree artifacts;
+  private JBPanel incidents;
+  private JBPanel requirements;
+  private JBPanel tasks;
 
   public SpiraToolWindowFactory() {
     panel = new JBPanel();
@@ -88,12 +86,15 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   }
 
   /**
-   * Adds all requirements to the {@code requirements} Tree
+   * Adds all requirements to {@code panel}
    */
   private void addRequirements(SpiraTeamCredentials credentials) throws IOException {
-    PatchedDefaultMutableTreeNode node = new PatchedDefaultMutableTreeNode("My Assigned Requirements");
-    requirements = new Tree(node);
-    requirements.addTreeSelectionListener(new SpiraTreeSelectionListener(requirements));
+    JBLabel requirementsLabel = new JBLabel("<HTML><h2>Requirements</h2></HTML>");
+    panel.add(requirementsLabel);
+    requirements = new JBPanel();
+    requirements.setBorder(new EmptyBorder(0,10,0,0));
+    requirements.setLayout(new BoxLayout(requirements, BoxLayout.Y_AXIS));
+    panel.add(requirements);
 
     Gson gson = new Gson();
     //get JSON from an HTTP request
@@ -104,19 +105,22 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       int projectId = ((Double)map.get("ProjectId")).intValue();
       int artifactId = ((Double)map.get("RequirementId")).intValue();
       Artifact artifact = new Requirement(projectId, artifactId);
-      SpiraTreeNode requirementNode = new SpiraTreeNode(map.get("Name"), SpiraTeamUtil.getArtifactURI(artifact, credentials.getUrl()));
-      node.add(requirementNode);
+      JBLabel label = new JBLabel((String)map.get("Name"));
+      label.addMouseListener(new LabelMouseListener(artifact, credentials.getUrl(), label));
+      requirements.add(label);
     }
-    //setting width to maximum to avoid text clipping
-    Dimension dimension = requirements.getMaximumSize();
-    dimension.setSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
-    requirements.setMaximumSize(dimension);
+    requirementsLabel.addMouseListener(new TreeListener(requirements));
   }
-
+  /**
+   * Adds all tasks to {@code panel}
+   */
   private void addTasks(SpiraTeamCredentials credentials) throws IOException {
-    PatchedDefaultMutableTreeNode node = new PatchedDefaultMutableTreeNode("My Assigned Tasks");
-    tasks = new Tree(node);
-    tasks.addTreeSelectionListener(new SpiraTreeSelectionListener(tasks));
+    JBLabel tasksLabel = new JBLabel("<HTML><h2>Tasks</h2></HTML>");
+    panel.add(tasksLabel);
+    tasks = new JBPanel();
+    tasks.setBorder(new EmptyBorder(0,10,0,0));
+    tasks.setLayout(new BoxLayout(tasks, BoxLayout.Y_AXIS));
+    panel.add(tasks);
 
     Gson gson = new Gson();
     //get JSON from an HTTP request
@@ -127,33 +131,36 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       int projectId = ((Double)map.get("ProjectId")).intValue();
       int artifactId = ((Double)map.get("TaskId")).intValue();
       Artifact artifact = new Task(projectId, artifactId);
-      SpiraTreeNode taskNode = new SpiraTreeNode(map.get("Name"), SpiraTeamUtil.getArtifactURI(artifact, credentials.getUrl()));
-      node.add(taskNode);
+      JBLabel label = new JBLabel((String)map.get("Name"));
+      label.addMouseListener(new LabelMouseListener(artifact, credentials.getUrl(), label));
+      tasks.add(label);
     }
-    //setting width to maximum to avoid text clipping
-    Dimension dimension = tasks.getMaximumSize();
-    dimension.setSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
-    tasks.setMaximumSize(dimension);
+    tasksLabel.addMouseListener(new TreeListener(tasks));
   }
-
+  /**
+   * Adds all incidents to {@code panel}
+   */
   private void addIncidents(SpiraTeamCredentials credentials) throws IOException {
-    PatchedDefaultMutableTreeNode node = new PatchedDefaultMutableTreeNode("My Assigned Incidents");
-    incidents = new Tree(node);
-    incidents.addTreeSelectionListener(new SpiraTreeSelectionListener(incidents));
+    JBLabel incidentsLabel = new JBLabel("<HTML><h2>Incidents</h2></HTML>");
+    Font font = incidentsLabel.getFont();
+    panel.add(incidentsLabel);
+    incidents = new JBPanel();
+    incidents.setBorder(new EmptyBorder(0,10,0,0));
+    incidents.setLayout(new BoxLayout(incidents, BoxLayout.Y_AXIS));
+    panel.add(incidents);
 
+    Gson gson = new Gson();
+    //read the JSON coming from the HTTP request
     ArrayList<LinkedTreeMap> list = SpiraTeamUtil.getAssignedIncidents(credentials);
     for(LinkedTreeMap map: list) {
       int projectId = ((Double)map.get("ProjectId")).intValue();
       int artifactId = ((Double)map.get("IncidentId")).intValue();
       Artifact artifact = new Incident(projectId, artifactId);
-      SpiraTreeNode incidentNode = new SpiraTreeNode(map.get("Name"), SpiraTeamUtil.getArtifactURI(artifact, credentials.getUrl()));
-      node.add(incidentNode);
+      JBLabel label = new JBLabel((String)map.get("Name"));
+      label.addMouseListener(new LabelMouseListener(artifact, credentials.getUrl(), label));
+      incidents.add(label);
     }
-    //incidents.expand
-    //setting width to maximum to avoid text clipping
-    Dimension dimension = incidents.getMaximumSize();
-    dimension.setSize(Integer.MAX_VALUE, dimension.getHeight());
-    incidents.setMaximumSize(dimension);
+    incidentsLabel.addMouseListener(new TreeListener(incidents));
   }
 
   @Override
@@ -163,11 +170,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     System.out.println(credentials);
     try {
       addRequirements(credentials);
-      panel.add(requirements);
       addTasks(credentials);
-      panel.add(tasks);
       addIncidents(credentials);
-      panel.add(incidents);
     }
     catch(Exception e) {
       e.printStackTrace();
@@ -177,7 +181,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
 
   @Override
   public void init(ToolWindow window) {
-    System.out.println(panel.getWidth());
   }
 
   @Override
@@ -191,26 +194,50 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   }
 }
 
-class SpiraTreeSelectionListener implements TreeSelectionListener {
-  private Tree tree;
-  public SpiraTreeSelectionListener(Tree tree) {
-    this.tree = tree;
+/**
+ * Adds functionality for creating custom trees
+ */
+class TreeListener implements MouseListener {
+  JBPanel panel;
+  boolean isExpanded = false;
+  public TreeListener(JBPanel panel) {
+    this.panel = panel;
+    //make panel invisible by default
+    panel.setVisible(false);
   }
+
   @Override
-  public void valueChanged(TreeSelectionEvent e) {
-    Object obj = tree.getLastSelectedPathComponent();
-    if(obj == null) {
-      //nothing is selected
-      return;
+  public void mouseClicked(MouseEvent e) {
+    if(isExpanded) {
+      //hide the artifacts
+      panel.setVisible(false);
+      isExpanded = false;
     }
-    if(obj instanceof SpiraTreeNode) {
-      //cast to node
-      SpiraTreeNode node = (SpiraTreeNode)obj;
-      if(node.isLeaf()) {
-        //open the page associated with the node
-        SpiraTeamUtil.openURL(node.getUri());
-      }
+    else {
+      //show the artifacts
+     panel.setVisible(true);
+     isExpanded=true;
     }
+  }
+
+  @Override
+  public void mousePressed(MouseEvent e) {
+
+  }
+
+  @Override
+  public void mouseReleased(MouseEvent e) {
+
+  }
+
+  @Override
+  public void mouseEntered(MouseEvent e) {
+
+  }
+
+  @Override
+  public void mouseExited(MouseEvent e) {
+
   }
 }
 
@@ -252,6 +279,22 @@ class LabelMouseListener implements MouseListener {
     label.setFont(font.deriveFont(attributes));
     //set the cursor to the hand
     label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+    new SpiraTeamPopup(createPanel(),  label);
+  }
+
+  /**
+   * @return A JBPanel with information regarding to the current artifact
+   */
+  private JBPanel createPanel() {
+    JBPanel panel = new JBPanel();
+    panel.setBorder(new EmptyBorder(5,5,5,5));
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.add(new JBLabel(label.getText()));
+    panel.add(new JBLabel("Artifact Type: " + artifact.getArtifactType()));
+    panel.add(new JBLabel("Project Id: " + artifact.getProjectId()));
+
+    return panel;
   }
 
   @Override
