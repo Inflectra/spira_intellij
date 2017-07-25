@@ -15,15 +15,90 @@
  */
 package com.inflectra.idea.ui;
 
-import com.intellij.openapi.ui.popup.ComponentPopupBuilder;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.ui.popup.*;
 import com.intellij.ui.components.JBPanel;
+import com.intellij.ui.popup.AbstractPopup;
+import com.intellij.util.Processor;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class SpiraTeamPopup {
+  private boolean isPinned = false;
+  private ComponentPopupBuilder popupBuilder;
+  private JBPopup popup;
+  private JButton pinButton;
+
   public SpiraTeamPopup(JBPanel panel, JComponent focusOn) {
-    ComponentPopupBuilder popup = JBPopupFactory.getInstance().createComponentPopupBuilder(panel, focusOn);
-    popup.createPopup().showUnderneathOf(focusOn);
+    popup = buildPopup(panel, focusOn);
+    popup.showUnderneathOf(focusOn);
+    addButtonListener();
+    //addPopupListener();
+  }
+
+  private void addPopupListener() {
+    popup.addListener(new JBPopupListener() {
+      @Override
+      public void beforeShown(LightweightWindowEvent event) {
+        //do nothing
+      }
+
+      @Override
+      public void onClosed(LightweightWindowEvent event) {
+        if (isPinned) {
+          System.out.println("Keeping open");
+          popup.cancel();
+          Point location = popup.getLocationOnScreen();
+          popup = popupBuilder.createPopup();
+          popup.showInFocusCenter();
+          popup.setLocation(location);
+        }
+        else {
+          System.out.println("Closing Popup");
+        }
+      }
+    });
+  }
+
+  /**
+   * Adds a listener to the button, allowing two states, 'pin' and 'unpin'
+   */
+  private void addButtonListener() {
+    pinButton.addActionListener(e -> {
+      if (!isPinned) {
+        pinButton.setText("Unpin");
+        isPinned = true;
+      }
+      else {
+        pinButton.setText("Pin");
+        isPinned = false;
+      }
+    });
+  }
+
+  /**
+   * Creates a popup with the given panel inside
+   *
+   * @param panel The panel inside the Popup
+   * @return
+   */
+  private JBPopup buildPopup(JBPanel panel, JComponent focusOn) {
+    popupBuilder = JBPopupFactory.getInstance().createComponentPopupBuilder(panel, focusOn);
+    //allows users to pin the Popup
+    pinButton = new JButton("Pin");
+    //add the button to the popup
+    panel.add(pinButton);
+    //allow the user to focus on the popup
+    popupBuilder.setFocusable(true);
+    //enable the user to resize the popup
+    popupBuilder.setResizable(true);
+    popupBuilder.setCouldPin(new Processor<JBPopup>() {
+      @Override
+      public boolean process(JBPopup popup) {
+        return true;
+      }
+    });
+
+    return popupBuilder.createPopup();
   }
 }

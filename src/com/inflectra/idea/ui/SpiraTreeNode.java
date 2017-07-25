@@ -21,16 +21,16 @@ import java.net.URI;
 
 /**
  * Node to be used in tree's which simply adds the ability to show additional information on click
+ *
  * @author peter.geertsema
  */
 public class SpiraTreeNode extends PatchedDefaultMutableTreeNode {
   private URI uri;
 
   /**
-   *
    * @param uri The URI which leads to the artifact on the web
    */
-  public SpiraTreeNode(Object userObject, URI uri){
+  public SpiraTreeNode(Object userObject, URI uri) {
     super(userObject);
     this.uri = uri;
   }

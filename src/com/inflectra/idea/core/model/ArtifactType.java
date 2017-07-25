@@ -21,6 +21,7 @@ public enum ArtifactType {
   TASK("Task");
 
   private String artifactName;
+
   ArtifactType(String artifactName) {
     this.artifactName = artifactName;
   }

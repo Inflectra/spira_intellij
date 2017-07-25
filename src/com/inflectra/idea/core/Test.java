@@ -25,13 +25,16 @@ import java.util.ArrayList;
 
 /**
  * Test class, not present in the UI whatsoever
+ *
  * @author peter.geertsema
  */
 public class Test {
   SpiraTeamCredentials credentials;
+
   public Test() {
     credentials = SpiraTeamCredentials.loadCredentials();
   }
+
   public static void main(String[] args) {
     try {
       Test test = new Test();
@@ -39,7 +42,7 @@ public class Test {
       //test.credentials();
       test.rest();
     }
-    catch(Exception e) {
+    catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -51,13 +54,14 @@ public class Test {
   private void json() {
     Gson gson = new Gson();
     try {
-      JsonReader reader = new JsonReader(new FileReader(this.getClass().getResource("com/inflectra/idea/ui/resources/incidents.json").getPath()));
+      JsonReader reader =
+        new JsonReader(new FileReader(this.getClass().getResource("com/inflectra/idea/ui/resources/incidents.json").getPath()));
       ArrayList<LinkedTreeMap> list = gson.fromJson(reader, ArrayList.class);
-      for(LinkedTreeMap map: list) {
+      for (LinkedTreeMap map : list) {
         System.out.println(map.get("Name"));
       }
     }
-    catch(Exception e) {
+    catch (Exception e) {
       e.printStackTrace();
     }
   }

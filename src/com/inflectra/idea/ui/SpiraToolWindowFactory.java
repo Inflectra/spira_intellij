@@ -29,13 +29,10 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.treeStructure.Tree;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -44,7 +41,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class SpiraToolWindowFactory implements ToolWindowFactory {
@@ -61,6 +57,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
 
   /**
    * Looks through the JSON Provided in the reader and uses that data to show data
+   *
    * @param reader
    * @return
    */
@@ -71,7 +68,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     Gson gson = new Gson();
     ArrayList<LinkedTreeMap> list = gson.fromJson(reader, ArrayList.class);
     //loop through every artifact in the JSON
-    for(LinkedTreeMap map: list) {
+    for (LinkedTreeMap map : list) {
       int projectId = ((Double)map.get("ProjectId")).intValue();
       int artifactId = ((Double)map.get("IncidentId")).intValue();
       Artifact artifact = new Incident(projectId, artifactId);
@@ -92,7 +89,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     JBLabel requirementsLabel = new JBLabel("<HTML><h2>Requirements</h2></HTML>");
     panel.add(requirementsLabel);
     requirements = new JBPanel();
-    requirements.setBorder(new EmptyBorder(0,10,0,0));
+    requirements.setBorder(new EmptyBorder(0, 10, 0, 0));
     requirements.setLayout(new BoxLayout(requirements, BoxLayout.Y_AXIS));
     panel.add(requirements);
 
@@ -101,7 +98,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     JsonReader jsonReader = new JsonReader(new InputStreamReader(SpiraTeamUtil.getAssignedRequirements(credentials)));
     //read the JSON coming from the HTTP request
     ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
-    for(LinkedTreeMap map: list) {
+    for (LinkedTreeMap map : list) {
       int projectId = ((Double)map.get("ProjectId")).intValue();
       int artifactId = ((Double)map.get("RequirementId")).intValue();
       Artifact artifact = new Requirement(projectId, artifactId);
@@ -111,6 +108,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     }
     requirementsLabel.addMouseListener(new TreeListener(requirements));
   }
+
   /**
    * Adds all tasks to {@code panel}
    */
@@ -118,7 +116,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     JBLabel tasksLabel = new JBLabel("<HTML><h2>Tasks</h2></HTML>");
     panel.add(tasksLabel);
     tasks = new JBPanel();
-    tasks.setBorder(new EmptyBorder(0,10,0,0));
+    tasks.setBorder(new EmptyBorder(0, 10, 0, 0));
     tasks.setLayout(new BoxLayout(tasks, BoxLayout.Y_AXIS));
     panel.add(tasks);
 
@@ -127,7 +125,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     JsonReader jsonReader = new JsonReader(new InputStreamReader(SpiraTeamUtil.getAssignedTasks(credentials)));
     //read the JSON coming from the HTTP request
     ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
-    for(LinkedTreeMap map: list) {
+    for (LinkedTreeMap map : list) {
       int projectId = ((Double)map.get("ProjectId")).intValue();
       int artifactId = ((Double)map.get("TaskId")).intValue();
       Artifact artifact = new Task(projectId, artifactId);
@@ -137,6 +135,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     }
     tasksLabel.addMouseListener(new TreeListener(tasks));
   }
+
   /**
    * Adds all incidents to {@code panel}
    */
@@ -145,14 +144,14 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     Font font = incidentsLabel.getFont();
     panel.add(incidentsLabel);
     incidents = new JBPanel();
-    incidents.setBorder(new EmptyBorder(0,10,0,0));
+    incidents.setBorder(new EmptyBorder(0, 10, 0, 0));
     incidents.setLayout(new BoxLayout(incidents, BoxLayout.Y_AXIS));
     panel.add(incidents);
 
     Gson gson = new Gson();
     //read the JSON coming from the HTTP request
     ArrayList<LinkedTreeMap> list = SpiraTeamUtil.getAssignedIncidents(credentials);
-    for(LinkedTreeMap map: list) {
+    for (LinkedTreeMap map : list) {
       int projectId = ((Double)map.get("ProjectId")).intValue();
       int artifactId = ((Double)map.get("IncidentId")).intValue();
       Artifact artifact = new Incident(projectId, artifactId);
@@ -173,7 +172,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       addTasks(credentials);
       addIncidents(credentials);
     }
-    catch(Exception e) {
+    catch (Exception e) {
       e.printStackTrace();
     }
     window.getComponent().add(panel);
@@ -200,6 +199,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
 class TreeListener implements MouseListener {
   JBPanel panel;
   boolean isExpanded = false;
+
   public TreeListener(JBPanel panel) {
     this.panel = panel;
     //make panel invisible by default
@@ -208,15 +208,15 @@ class TreeListener implements MouseListener {
 
   @Override
   public void mouseClicked(MouseEvent e) {
-    if(isExpanded) {
+    if (isExpanded) {
       //hide the artifacts
       panel.setVisible(false);
       isExpanded = false;
     }
     else {
       //show the artifacts
-     panel.setVisible(true);
-     isExpanded=true;
+      panel.setVisible(true);
+      isExpanded = true;
     }
   }
 
@@ -248,6 +248,7 @@ class LabelMouseListener implements MouseListener {
   private Artifact artifact;
   private String url;
   private JBLabel label;
+
   public LabelMouseListener(Artifact artifact, String url, JBLabel label) {
     this.artifact = artifact;
     this.url = url;
@@ -280,7 +281,7 @@ class LabelMouseListener implements MouseListener {
     //set the cursor to the hand
     label.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-    new SpiraTeamPopup(createPanel(),  label);
+    new SpiraTeamPopup(createPanel(), label);
   }
 
   /**
@@ -288,7 +289,7 @@ class LabelMouseListener implements MouseListener {
    */
   private JBPanel createPanel() {
     JBPanel panel = new JBPanel();
-    panel.setBorder(new EmptyBorder(5,5,5,5));
+    panel.setBorder(new EmptyBorder(5, 5, 5, 5));
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
     panel.add(new JBLabel(label.getText()));
     panel.add(new JBLabel("Artifact Type: " + artifact.getArtifactType()));

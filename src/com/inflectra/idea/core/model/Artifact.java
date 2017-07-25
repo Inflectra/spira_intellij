@@ -32,12 +32,14 @@ public abstract class Artifact {
   public int getProjectId() {
     return projectId;
   }
+
   /**
    * @return The id of the artifact
    */
   public int getArtifactId() {
     return artifactId;
   }
+
   /**
    * @return The type of artifact
    */
@@ -51,17 +53,18 @@ public abstract class Artifact {
   public boolean isIncident() {
     return artifactType == ArtifactType.INCIDENT;
   }
+
   /**
    * @return True if the artifact is a requirement, false otherwise
    */
   public boolean isRequirement() {
     return artifactType == ArtifactType.REQUIREMENT;
   }
+
   /**
    * @return True if the artifact is a task, false otherwise
    */
   public boolean isTask() {
     return artifactType == ArtifactType.TASK;
   }
-
 }

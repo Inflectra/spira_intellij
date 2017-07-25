@@ -24,6 +24,7 @@ import com.intellij.openapi.project.Project;
 public class SpiraTeamLogin extends AnAction {
 
   private SpiraTeamCredentials credentials;
+
   public SpiraTeamLogin() {
     super("SpiraTeamLogin");
     credentials = SpiraTeamCredentials.loadCredentials();
@@ -32,7 +33,7 @@ public class SpiraTeamLogin extends AnAction {
   @Override
   public void actionPerformed(AnActionEvent event) {
     Project project = event.getData(PlatformDataKeys.PROJECT);
-    SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, "SpiraTeam Login", credentials );
+    SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, "SpiraTeam Login", credentials);
     dialog.show();
   }
 }

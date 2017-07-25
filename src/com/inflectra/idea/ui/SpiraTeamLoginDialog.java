@@ -31,7 +31,6 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
   private SpiraTeamCredentials credentials;
 
 
-
   public SpiraTeamLoginDialog(Project project, String title, SpiraTeamCredentials credentials) {
     super(project);
     this.credentials = credentials;
@@ -48,18 +47,21 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     out.setLayout(new BoxLayout(out, BoxLayout.Y_AXIS));
 
     url = new JTextField(30);
-    if(credentials.getUrl() != null)
+    if (credentials.getUrl() != null) {
       url.setText(credentials.getUrl());
+    }
     out.add(new JLabel("SpiraTeam URL:"));
     out.add(url);
     username = new JTextField(30);
-    if(credentials.getUsername() != null)
+    if (credentials.getUsername() != null) {
       username.setText(credentials.getUsername());
+    }
     out.add(new JLabel("Username:"));
     out.add(username);
     rssToken = new JTextField(30);
-    if(credentials.getToken() != null)
+    if (credentials.getToken() != null) {
       rssToken.setText(credentials.getToken());
+    }
     out.add(new JLabel("RSS Token:"));
     out.add(rssToken);
 
@@ -94,6 +96,7 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
   public JComponent getPreferredFocusedComponent() {
     return this.url;
   }
+
   /**
    * @return A reference to the rssToken TextField
    */

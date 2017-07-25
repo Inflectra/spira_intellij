@@ -32,43 +32,49 @@ import java.util.ArrayList;
 
 /**
  * Class with a wide variety of utility methods used throughout the plug-in
+ *
  * @author peter.geertsema
  */
 public class SpiraTeamUtil {
   /**
-   *
    * @param artifactTypeId The ID of the artifact type
    * @return the artifact type corresponding to the ID, null if the artifact type id is not supported
    */
   public static ArtifactType getArtifactType(int artifactTypeId) {
-    switch(artifactTypeId) {
-      case 1: return ArtifactType.REQUIREMENT;
-      case 3: return ArtifactType.INCIDENT;
-      case 6: return ArtifactType.TASK;
-      default: return null;
+    switch (artifactTypeId) {
+      case 1:
+        return ArtifactType.REQUIREMENT;
+      case 3:
+        return ArtifactType.INCIDENT;
+      case 6:
+        return ArtifactType.TASK;
+      default:
+        return null;
     }
   }
 
   /**
    * Opens the URI, if possible
+   *
    * @param in The URI
    */
   public static void openURL(URI in) {
     if (Desktop.isDesktopSupported()) {
       try {
         Desktop.getDesktop().browse(in);
-      } catch (IOException e) {
+      }
+      catch (IOException e) {
         e.printStackTrace();
       }
-    } else {
+    }
+    else {
       //do nothing
     }
   }
 
   /**
-   *
    * @param artifact The artifact we are dealing with
-   * @param baseURL The base URL of the user
+   * @param baseURL  The base URL of the user
    * @return the URI which leads to the SpiraTeam website on that artifact
    */
   public static URI getArtifactURI(Artifact artifact, String baseURL) {
@@ -76,14 +82,13 @@ public class SpiraTeamUtil {
       return new URI(baseURL + "/" + artifact.getProjectId() + "/" + artifact.getArtifactType().getArtifactName() +
                      "/" + artifact.getArtifactId() + ".aspx");
     }
-    catch(Exception e) {
+    catch (Exception e) {
       e.printStackTrace();
     }
     return null;
   }
 
   /**
-   *
    * @param credentials The information URL and login information needed to perform the HTTP request
    * @return An InputStream containing JSON with all requirements assigned to the user
    * @throws IOException If the URL is invalid
@@ -108,7 +113,7 @@ public class SpiraTeamUtil {
     //get all of the projects available to the user
     ArrayList<Integer> projectIds = getAvailableProjects(credentials);
     //loop through all of the available projects
-    for(int projectId: projectIds) {
+    for (int projectId : projectIds) {
       String url = credentials.getUrl() +
                    "/services/v5_0/RestService.svc/projects/" + projectId + "/incidents/search" +
                    "?start_row=1&number_rows=1000&sort_by=Priority&username=" + credentials.getUsername() +
@@ -118,13 +123,12 @@ public class SpiraTeamUtil {
       Gson gson = new Gson();
       //reading JSON from each project
       ArrayList<LinkedTreeMap> list = gson.fromJson(new JsonReader(stream), ArrayList.class);
-      for(LinkedTreeMap map: list) {
+      for (LinkedTreeMap map : list) {
         //add each map to the final output list
         out.add(map);
       }
     }
     return out;
-
   }
 
   /**
@@ -143,7 +147,7 @@ public class SpiraTeamUtil {
     //turn JSON into an ArrayList
     ArrayList<LinkedTreeMap> jsonList = gson.fromJson(reader, ArrayList.class);
     ArrayList<Integer> out = new ArrayList<Integer>();
-    for(LinkedTreeMap map: jsonList) {
+    for (LinkedTreeMap map : jsonList) {
       Double toAdd = (Double)map.get("ProjectId");
       out.add(toAdd.intValue());
     }
@@ -152,6 +156,7 @@ public class SpiraTeamUtil {
 
   /**
    * Performs an HTTP GET request to the specified URL
+   *
    * @param input The URL to perform the query on
    * @return An InputStream containing the JSON returned from the GET request
    * @throws MalformedURLException If the URL is invalid
@@ -168,8 +173,9 @@ public class SpiraTeamUtil {
 
   /**
    * Performs an HTTP POST request ot the specified URL
+   *
    * @param input The URL to perform the query on
-   * @param body The request body to be sent
+   * @param body  The request body to be sent
    * @return An InputStream containing the JSON returned from the POST request
    * @throws IOException
    */

@@ -28,16 +28,18 @@ import java.util.Scanner;
 
 /**
  * Class which represents the username, RSS token and base URL to access SpiraTeam
+ *
  * @author peter.geertsema
  */
-@State(name="SpiraTeamCredentials",
-       storages = {
-          @Storage(StoragePathMacros.WORKSPACE_FILE)
-       })
+@State(name = "SpiraTeamCredentials",
+  storages = {
+    @Storage(StoragePathMacros.WORKSPACE_FILE)
+  })
 public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamCredentials.State> {
   class State {
     public State() {
     }
+
     /**
      * The username of the user
      */
@@ -52,9 +54,10 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
     private String url;
 
     @Override
-    public boolean equals(Object  other) {
-      if(!(other instanceof State))
+    public boolean equals(Object other) {
+      if (!(other instanceof State)) {
         return false;
+      }
       State otherS = (State)other;
       return username.equals(otherS.username) && token.equals(otherS.token) && url.equals(otherS.token);
     }
@@ -78,7 +81,7 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
       out.setToken(reader.nextLine());
       reader.close();
     }
-    catch(Exception e) {
+    catch (Exception e) {
       e.printStackTrace();
     }
     return out;
@@ -92,7 +95,7 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
       writer.println(this.getToken());
       writer.close();
     }
-    catch(Exception e) {
+    catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -151,6 +154,6 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
 
   @Override
   public String toString() {
-   return "username: " + this.state.username + " RSS Token: " + this.state.token + " URL: " + this.state.url;
+    return "username: " + this.state.username + " RSS Token: " + this.state.token + " URL: " + this.state.url;
   }
 }
