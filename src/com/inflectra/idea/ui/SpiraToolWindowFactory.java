@@ -48,6 +48,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Is the 'core' of the plug-in's UI, this is the class from which the SpiraToolWindow originates from
+ * @author peter.geertsema
+ */
 public class SpiraToolWindowFactory implements ToolWindowFactory {
   /**
    * Contains all of the assigned artifacts
@@ -71,104 +75,139 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   }
 
   /**
-   * Adds all requirements to {@code topPanel}
+   * Performs a REST call and adds all requirements to {@code topPanel}
    */
   private void addRequirements(SpiraTeamCredentials credentials) throws IOException {
-    JBLabel requirementsLabel = new JBLabel("<HTML><h2>Requirements</h2></HTML>");
-    topPanel.add(requirementsLabel);
-    JBPanel requirements = new JBPanel();
-    requirements.setBorder(new EmptyBorder(0, 10, 0, 0));
-    requirements.setLayout(new BoxLayout(requirements, BoxLayout.Y_AXIS));
-    topPanel.add(requirements);
-
     Gson gson = new Gson();
-    //get JSON from an HTTP request
+    //getAssignedRequirements returns an InputStream with the JSON from the REST request, that is then read by the JsonReader
     JsonReader jsonReader = new JsonReader(new InputStreamReader(SpiraTeamUtil.getAssignedRequirements(credentials)));
-    //read the JSON coming from the HTTP request
+    //Turn the JSON into something java understands
     ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
-    for (LinkedTreeMap map : list) {
-      int projectId = ((Double)map.get("ProjectId")).intValue();
-      int artifactId = ((Double)map.get("RequirementId")).intValue();
-      String description = (String)map.get("Description");
-      String projectName = (String)map.get("ProjectName");
-      //the name of the artifact
-      String name = (String)map.get("Name");
-      //create an artifact with the fields from above
-      Artifact artifact = new Incident(projectId, projectName, artifactId, name);
-      //set the description of the artifact
-      artifact.setDescription(description);
-      JBLabel label = new JBLabel(name);
-      label.addMouseListener(new LabelMouseListener(artifact, credentials.getUrl(), label, this));
-      requirements.add(label);
+    //only show requirements if there are any assigned to the user
+    if(list.size() > 0) {
+      //title label for requirements
+      JBLabel requirementsLabel = new JBLabel("<HTML><h2>Requirements</h2></HTML>");
+      //add the label to the top panel
+      topPanel.add(requirementsLabel);
+      //panel which fits under the "Requirements" label which will contain artifact names
+      JBPanel requirements = new JBPanel();
+      //make the new panel have no border
+      requirements.setBorder(new EmptyBorder(0, 10, 0, 0));
+      //make the panel lay out its children vertically
+      requirements.setLayout(new BoxLayout(requirements, BoxLayout.Y_AXIS));
+      //add the new panel to the top panel
+      topPanel.add(requirements);
+      //loop through every LinkedTreeMap in list
+      for (LinkedTreeMap map : list) {
+        //get the ProjectId, cast it to a double and get its int value
+        int projectId = ((Double)map.get("ProjectId")).intValue();
+        int artifactId = ((Double)map.get("RequirementId")).intValue();
+        String description = (String)map.get("Description");
+        String projectName = (String)map.get("ProjectName");
+        String name = (String)map.get("Name");
+
+        //create an artifact with the fields from above
+        Artifact artifact = new Incident(projectId, projectName, artifactId, name);
+        //set the description of the artifact
+        artifact.setDescription(description);
+        JBLabel label = new JBLabel(name);
+        //allow the user to click the label
+        label.addMouseListener(new LabelMouseListener(artifact, label, this));
+        requirements.add(label);
+      }
+      //allow the user to click on the big requirement label to expand/collapse the artifact names
+      requirementsLabel.addMouseListener(new TreeListener(requirements));
     }
-    requirementsLabel.addMouseListener(new TreeListener(requirements));
   }
 
   /**
-   * Adds all tasks to {@code topPanel}
+   * Performs a REST call and adds all tasks to {@code topPanel}
    */
   private void addTasks(SpiraTeamCredentials credentials) throws IOException {
-    JBLabel tasksLabel = new JBLabel("<HTML><h2>Tasks</h2></HTML>");
-    topPanel.add(tasksLabel);
-    JBPanel tasks = new JBPanel();
-    tasks.setBorder(new EmptyBorder(0, 10, 0, 0));
-    tasks.setLayout(new BoxLayout(tasks, BoxLayout.Y_AXIS));
-    topPanel.add(tasks);
-
     Gson gson = new Gson();
-    //get JSON from an HTTP request
+    //getAssignedRequirements returns an InputStream with the JSON from the REST request, that is then read by the JsonReader
     JsonReader jsonReader = new JsonReader(new InputStreamReader(SpiraTeamUtil.getAssignedTasks(credentials)));
-    //read the JSON coming from the HTTP request
+    //Turn the JSON into something java understands
     ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
-    for (LinkedTreeMap map : list) {
-      int projectId = ((Double)map.get("ProjectId")).intValue();
-      int artifactId = ((Double)map.get("TaskId")).intValue();
-      String description = (String)map.get("Description");
-      String projectName = (String)map.get("ProjectName");
-      //the name of the artifact
-      String name = (String)map.get("Name");
-      //create an artifact with the fields from above
-      Artifact artifact = new Incident(projectId, projectName, artifactId, name);
-      //set the description
-      artifact.setDescription(description);
-      JBLabel label = new JBLabel(name);
-      label.addMouseListener(new LabelMouseListener(artifact, credentials.getUrl(), label, this));
-      tasks.add(label);
+    //only add if there are assigned tasks
+    if(list.size() > 0) {
+      JBLabel tasksLabel = new JBLabel("<HTML><h2>Tasks</h2></HTML>");
+      topPanel.add(tasksLabel);
+      JBPanel tasks = new JBPanel();
+      tasks.setBorder(new EmptyBorder(0, 10, 0, 0));
+      tasks.setLayout(new BoxLayout(tasks, BoxLayout.Y_AXIS));
+      topPanel.add(tasks);
+      //loop through every map in list
+      for (LinkedTreeMap map : list) {
+        int projectId = ((Double)map.get("ProjectId")).intValue();
+        int artifactId = ((Double)map.get("TaskId")).intValue();
+        String description = (String)map.get("Description");
+        String projectName = (String)map.get("ProjectName");
+        String name = (String)map.get("Name");
+        //create an artifact with the fields from above
+        Artifact artifact = new Incident(projectId, projectName, artifactId, name);
+        //set the description
+        artifact.setDescription(description);
+        JBLabel label = new JBLabel(name);
+        //allow the user to click on the label
+        label.addMouseListener(new LabelMouseListener(artifact, label, this));
+        tasks.add(label);
+      }
+      //enable expand/collapse features
+      tasksLabel.addMouseListener(new TreeListener(tasks));
     }
-    tasksLabel.addMouseListener(new TreeListener(tasks));
   }
 
   /**
-   * Adds all incidents to {@code topPanel}
+   * Performs a REST call and adds all incidents to {@code topPanel}
    */
   private void addIncidents(SpiraTeamCredentials credentials) throws IOException {
-    JBLabel incidentsLabel = new JBLabel("<HTML><h2>Incidents</h2></HTML>");
-    Font font = incidentsLabel.getFont();
-    topPanel.add(incidentsLabel);
-    JBPanel incidents = new JBPanel();
-    incidents.setBorder(new EmptyBorder(0, 10, 0, 0));
-    incidents.setLayout(new BoxLayout(incidents, BoxLayout.Y_AXIS));
-    topPanel.add(incidents);
-
+    //create a new Gson object
     Gson gson = new Gson();
-    //read the JSON coming from the HTTP request
+    //list which contain all of the information on incidents from the REST request
     ArrayList<LinkedTreeMap> list = SpiraTeamUtil.getAssignedIncidents(credentials);
-    for (LinkedTreeMap map : list) {
-      int projectId = ((Double)map.get("ProjectId")).intValue();
-      int artifactId = ((Double)map.get("IncidentId")).intValue();
-      String description = (String)map.get("Description");
-      String projectName = (String)map.get("ProjectName");
-      //the name of the artifact
-      String name = (String)map.get("Name");
-      //create an artifact with the fields from above
-      Artifact artifact = new Incident(projectId, projectName, artifactId, name);
-      //set the description
-      artifact.setDescription(description);
-      JBLabel label = new JBLabel(name);
-      label.addMouseListener(new LabelMouseListener(artifact, credentials.getUrl(), label, this));
-      incidents.add(label);
+    //only add incidents if there is at least one returned from the REST request
+    if(list.size() > 0) {
+      //incidents 'parent' label
+      JBLabel incidentsLabel = new JBLabel("<HTML><h2>Incidents</h2></HTML>");
+      //add the title to the panel
+      topPanel.add(incidentsLabel);
+      //create a panel which will fit under the big incidentsLabel
+      JBPanel incidents = new JBPanel();
+      //make the panel have no border
+      incidents.setBorder(new EmptyBorder(0, 10, 0, 0));
+      //make the panel lay out its children horizontally
+      incidents.setLayout(new BoxLayout(incidents, BoxLayout.Y_AXIS));
+      //add the incidents panel to the main top panel
+      topPanel.add(incidents);
+      //for each LinkedTreeMap in list
+      for (LinkedTreeMap map : list) {
+        //get the project Id, cast it to a double and get its integer value
+        int projectId = ((Double)map.get("ProjectId")).intValue();
+        //get the incident Id, cast it to a double and get its integer value
+        //we call it artifact Id as it is a property in the Artifact class
+        int artifactId = ((Double)map.get("IncidentId")).intValue();
+        //get the description of the artifact
+        String description = (String)map.get("Description");
+        //get the project name of the artifact
+        String projectName = (String)map.get("ProjectName");
+        //the name of the artifact
+        String name = (String)map.get("Name");
+        //create an artifact with the fields from above
+        Artifact artifact = new Incident(projectId, projectName, artifactId, name);
+        //set the description
+        artifact.setDescription(description);
+        //create a label which says the name of the artifact
+        JBLabel label = new JBLabel(name);
+        //add a listener, see the LabelMouseListener class below
+        label.addMouseListener(new LabelMouseListener(artifact, label, this));
+        //add the label to the incidents panel
+        incidents.add(label);
+      }
+      //add a TreeListener (see below) to the label, passing in the panel
+      //this listener shows the incidents panel when the incidents label is pressed
+      incidentsLabel.addMouseListener(new TreeListener(incidents));
     }
-    incidentsLabel.addMouseListener(new TreeListener(incidents));
   }
 
   /**
@@ -192,8 +231,11 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     System.out.println(credentials);
     try {
+      //add requirements to the top panel
       addRequirements(credentials);
+      //add tasks to the top panel
       addTasks(credentials);
+      //add incidents to the top panel
       addIncidents(credentials);
     }
     catch (Exception e) {
@@ -213,26 +255,29 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     splitter.setSecondComponent(bottomScroll);
     //add the split-screen to the tool window
     window.getComponent().add(splitter);
-
   }
 
   @Override
   public void init(ToolWindow window) {
+    //do nothing
   }
 
   @Override
   public boolean shouldBeAvailable(@NotNull Project project) {
+    //not used
     return false;
   }
 
   @Override
   public boolean isDoNotActivateOnStart() {
+    //not used
     return false;
   }
 }
 
 /**
  * Adds functionality for creating custom trees
+ * <p>When the user clicks the given label, the panel passed in with the artifact names is expanded</p>
  */
 class TreeListener implements MouseListener {
   JBPanel panel;
@@ -244,13 +289,18 @@ class TreeListener implements MouseListener {
     panel.setVisible(false);
   }
 
+  /**
+   * The only method we care about, the others are irrelevant
+   */
   @Override
   public void mouseClicked(MouseEvent e) {
+    //hide the list if it is already expanded
     if (isExpanded) {
       //hide the artifacts
       panel.setVisible(false);
       isExpanded = false;
     }
+    //show the list if it is not expanded
     else {
       //show the artifacts
       panel.setVisible(true);
@@ -275,47 +325,47 @@ class TreeListener implements MouseListener {
 
   @Override
   public void mouseExited(MouseEvent e) {
-
+    //do nothing
   }
 }
 
 /**
- * Listener which implements link functionality to label's
+ * Allows users to click on labels and underlines the label when the user hovers over it
  */
 class LabelMouseListener implements MouseListener {
   private Artifact artifact;
-  private String url;
   private JBLabel label;
-  private SpiraTeamPopup popup;
+  /**
+   * Used only to show information in the bottom panel when a label is clicked
+   */
   private SpiraToolWindowFactory window;
 
-  public LabelMouseListener(Artifact artifact, String url, JBLabel label, SpiraToolWindowFactory window) {
+  public LabelMouseListener(Artifact artifact, JBLabel label, SpiraToolWindowFactory window) {
     this.artifact = artifact;
-    this.url = url;
     this.label = label;
     this.window = window;
   }
 
   @Override
   public void mouseClicked(MouseEvent e) {
-    //open artifact in browser
-    //SpiraTeamUtil.openURL(SpiraTeamUtil.getArtifactURI(artifact, url));
+    //show additional information on the artifact in the bottom panel
     window.showInformation(artifact);
   }
 
   @Override
   public void mousePressed(MouseEvent e) {
-
+    //do nothing
   }
 
   @Override
   public void mouseReleased(MouseEvent e) {
-
+    //do nothing
   }
 
   @Override
   public void mouseEntered(MouseEvent e) {
     Font font = label.getFont();
+    //create a Map with the attributes of the font
     Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
     //turning on the underline
     attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);

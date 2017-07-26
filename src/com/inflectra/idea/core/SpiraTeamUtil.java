@@ -59,8 +59,10 @@ public class SpiraTeamUtil {
    * @param in The URI
    */
   public static void openURL(URI in) {
+    //only attempt to open URI if it is supported
     if (Desktop.isDesktopSupported()) {
       try {
+        //open the URI in browser
         Desktop.getDesktop().browse(in);
       }
       catch (IOException e) {
@@ -79,10 +81,12 @@ public class SpiraTeamUtil {
    */
   public static URI getArtifactURI(Artifact artifact, String baseURL) {
     try {
+      //procedurally generates the URI for the artifact in question
       return new URI(baseURL + "/" + artifact.getProjectId() + "/" + artifact.getArtifactType().getArtifactName() +
                      "/" + artifact.getArtifactId() + ".aspx");
     }
     catch (Exception e) {
+      //should never happen
       e.printStackTrace();
     }
     return null;
@@ -107,6 +111,7 @@ public class SpiraTeamUtil {
   }
 
   public static ArrayList<LinkedTreeMap> getAssignedIncidents(SpiraTeamCredentials credentials) throws IOException {
+    //the body of the request
     String body = "[{\"PropertyName\": \"OwnerId\", \"IntValue\": 1}, {\"PropertyName\": \"IncidentStatusId\", \"IntValue\": -2}]";
     //the list to be returned
     ArrayList<LinkedTreeMap> out = new ArrayList<>();
@@ -114,6 +119,7 @@ public class SpiraTeamUtil {
     ArrayList<Integer> projectIds = getAvailableProjects(credentials);
     //loop through all of the available projects
     for (int projectId : projectIds) {
+      //build the URL for each project
       String url = credentials.getUrl() +
                    "/services/v5_0/RestService.svc/projects/" + projectId + "/incidents/search" +
                    "?start_row=1&number_rows=1000&sort_by=Priority&username=" + credentials.getUsername() +
@@ -164,7 +170,6 @@ public class SpiraTeamUtil {
   public static InputStream httpGet(String input) throws IOException {
     URL url = new URL(input);
     URLConnection connection = url.openConnection();
-    connection.setDoOutput(true);
     //have the connection retrieve JSON
     connection.setRequestProperty("accept", "application/json; charset=utf-8");
     connection.connect();
@@ -184,15 +189,14 @@ public class SpiraTeamUtil {
     HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
     connection.setDoOutput(true);
     connection.setRequestMethod("POST");
-    //add headers
+    //have the connection send and retrieve JSON
     connection.setRequestProperty("accept", "application/json; charset=utf-8");
     connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-
     connection.connect();
+    //used to send data in the REST request
     DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
-
-
     outputStream.writeBytes(body);
+    //send the OutputStream to the server
     outputStream.flush();
     outputStream.close();
     return connection.getInputStream();

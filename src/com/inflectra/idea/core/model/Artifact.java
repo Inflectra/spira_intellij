@@ -118,9 +118,11 @@ public abstract class Artifact {
 
   @Override
   public boolean equals(Object other) {
+    //not equal of other is not an Artifact
     if(!(other instanceof Artifact))
       return false;
     Artifact artifact = (Artifact)other;
+    //they are true if they have the same projectId, artifactId and artifactType
     if(artifact.projectId == projectId && artifact.artifactId == artifactId && artifact.artifactType == artifactType)
       return true;
     return false;

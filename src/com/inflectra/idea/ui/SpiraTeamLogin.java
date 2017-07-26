@@ -21,6 +21,10 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.project.Project;
 
+/**
+ * Action which allows the user to log into SpiraTeam
+ * @author peter.geertsema
+ */
 public class SpiraTeamLogin extends AnAction {
 
   private SpiraTeamCredentials credentials;
@@ -33,6 +37,7 @@ public class SpiraTeamLogin extends AnAction {
   @Override
   public void actionPerformed(AnActionEvent event) {
     Project project = event.getData(PlatformDataKeys.PROJECT);
+    //prompt the user to log in
     SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, "SpiraTeam Login", credentials);
     dialog.show();
   }
