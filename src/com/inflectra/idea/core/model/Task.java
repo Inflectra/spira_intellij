@@ -16,7 +16,7 @@
 package com.inflectra.idea.core.model;
 
 public class Task extends Artifact {
-  public Task(int projectId, int artifactId) {
-    super(projectId, artifactId, ArtifactType.TASK);
+  public Task(int projectId, String projectName, int artifactId, String name) {
+    super(projectId, projectName, artifactId, ArtifactType.TASK, name);
   }
 }

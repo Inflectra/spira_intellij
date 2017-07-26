@@ -29,4 +29,17 @@ public enum ArtifactType {
   public String getArtifactName() {
     return artifactName;
   }
+
+  /**
+   * @return The prefix of the artifact type, example IN for Incidents
+   */
+  public String getPrefix() {
+    if(this == REQUIREMENT)
+      return "RQ";
+    if(this == INCIDENT)
+      return "IN";
+    if(this == TASK)
+      return "TK";
+    return null;
+  }
 }

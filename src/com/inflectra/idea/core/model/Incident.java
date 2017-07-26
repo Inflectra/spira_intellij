@@ -17,7 +17,7 @@ package com.inflectra.idea.core.model;
 
 public class Incident extends Artifact {
 
-  public Incident(int projectId, int artifactId) {
-    super(projectId, artifactId, ArtifactType.INCIDENT);
+  public Incident(int projectId, String projectName, int artifactId, String name) {
+    super(projectId, projectName, artifactId, ArtifactType.INCIDENT, name);
   }
 }

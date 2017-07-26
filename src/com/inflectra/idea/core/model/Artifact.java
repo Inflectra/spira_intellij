@@ -17,13 +17,24 @@ package com.inflectra.idea.core.model;
 
 public abstract class Artifact {
   private int projectId;
+  private String projectName;
+  /**
+   * The name of the artifact
+   */
+  private String name;
+  /**
+   * The ID of the artifact
+   */
   private int artifactId;
   private ArtifactType artifactType;
+  private String description;
 
-  public Artifact(int projectId, int artifactId, ArtifactType artifactType) {
+  public Artifact(int projectId, String projectName, int artifactId, ArtifactType artifactType, String name) {
     this.projectId = projectId;
     this.artifactId = artifactId;
     this.artifactType = artifactType;
+    this.name = name;
+    this.projectName = projectName;
   }
 
   /**
@@ -48,6 +59,43 @@ public abstract class Artifact {
   }
 
   /**
+   * @return The description of the artifact
+   */
+  public String getDescription() {
+    if(description == null)
+      return "none";
+    return description;
+  }
+
+  /**
+   * @return The name of the artifact
+   */
+  public String getName() {
+    return name;
+  }
+
+  /**
+   * @param description The new value for the description property
+   */
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  /**
+   * @return The value of the projectName property
+   */
+  public String getProjectName() {
+    return projectName;
+  }
+
+  /**
+   * @return The prefix for the artifact type, example IN for Incidents
+   */
+  public String getPrefix() {
+    return artifactType.getPrefix();
+  }
+
+  /**
    * @return True if the artifact is an incident, false otherwise
    */
   public boolean isIncident() {
@@ -66,5 +114,15 @@ public abstract class Artifact {
    */
   public boolean isTask() {
     return artifactType == ArtifactType.TASK;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if(!(other instanceof Artifact))
+      return false;
+    Artifact artifact = (Artifact)other;
+    if(artifact.projectId == projectId && artifact.artifactId == artifactId && artifact.artifactType == artifactType)
+      return true;
+    return false;
   }
 }

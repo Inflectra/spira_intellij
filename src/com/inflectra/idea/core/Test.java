@@ -19,7 +19,12 @@ package com.inflectra.idea.core;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.stream.JsonReader;
+import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBPanel;
+import com.intellij.ui.components.JBScrollPane;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.FileReader;
 import java.util.ArrayList;
 
@@ -40,11 +45,29 @@ public class Test {
       Test test = new Test();
       //test.json();
       //test.credentials();
-      test.rest();
+      //test.rest();
+      test.scroll();
     }
     catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void scroll() {
+    JFrame frame = new JFrame();
+    frame.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
+
+    JBPanel panel = new JBPanel();
+    Container c = frame.getContentPane();
+    panel.setSize(100,100);
+    panel.setLayout(new GridLayout(1000, 1));
+    for(int i = 0; i<1000;i++)
+      panel.add(new JBLabel("Label " + i));
+
+    JScrollPane jsp = new JBScrollPane(panel);
+    c.add(jsp);
+    frame.setSize(100,100);
+    frame.setVisible(true);
   }
 
   private void rest() throws Exception {
