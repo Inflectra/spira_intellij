@@ -44,6 +44,7 @@ import java.awt.event.MouseListener;
 import java.awt.font.TextAttribute;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,17 +103,23 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         //get the ProjectId, cast it to a double and get its int value
         int projectId = ((Double)map.get("ProjectId")).intValue();
         int artifactId = ((Double)map.get("RequirementId")).intValue();
+        String priorityName = (String)map.get("ImportanceName");
         String description = (String)map.get("Description");
         String projectName = (String)map.get("ProjectName");
         String name = (String)map.get("Name");
+        //workflow status name
+        String status = (String)map.get("StatusName");
+        String type = (String)map.get("RequirementTypeName");
+
 
         //create an artifact with the fields from above
-        Artifact artifact = new Incident(projectId, projectName, artifactId, name);
+        Artifact artifact = new Requirement(projectId, projectName, artifactId, name, priorityName);
         //set the description of the artifact
         artifact.setDescription(description);
+        artifact.setStatus(status);
         JBLabel label = new JBLabel(name);
         //allow the user to click the label
-        label.addMouseListener(new LabelMouseListener(artifact, label, this));
+        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
         requirements.add(label);
       }
       //allow the user to click on the big requirement label to expand/collapse the artifact names
@@ -143,14 +150,21 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         int artifactId = ((Double)map.get("TaskId")).intValue();
         String description = (String)map.get("Description");
         String projectName = (String)map.get("ProjectName");
+        String priorityName = (String)map.get("TaskPriorityName");
         String name = (String)map.get("Name");
+        String status = (String)map.get("TaskStatusName");
+        String type = (String)map.get("TaskTypeName");
+
+
         //create an artifact with the fields from above
-        Artifact artifact = new Incident(projectId, projectName, artifactId, name);
+        Artifact artifact = new Task(projectId, projectName, artifactId, name, priorityName);
         //set the description
         artifact.setDescription(description);
+        artifact.setStatus(status);
+        artifact.setType(type);
         JBLabel label = new JBLabel(name);
         //allow the user to click on the label
-        label.addMouseListener(new LabelMouseListener(artifact, label, this));
+        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
         tasks.add(label);
       }
       //enable expand/collapse features
@@ -191,16 +205,24 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         String description = (String)map.get("Description");
         //get the project name of the artifact
         String projectName = (String)map.get("ProjectName");
+        String priorityName = (String)map.get("PriorityName");
         //the name of the artifact
         String name = (String)map.get("Name");
+        String status = (String)map.get("IncidentStatusName");
+        //the type of incident ex bug, incident, etc
+        String type = (String)map.get("IncidentTypeName");
+
+
         //create an artifact with the fields from above
-        Artifact artifact = new Incident(projectId, projectName, artifactId, name);
+        Artifact artifact = new Incident(projectId, projectName, artifactId, name, priorityName);
         //set the description
         artifact.setDescription(description);
+        artifact.setStatus(status);
+        artifact.setType(type);
         //create a label which says the name of the artifact
         JBLabel label = new JBLabel(name);
         //add a listener, see the LabelMouseListener class below
-        label.addMouseListener(new LabelMouseListener(artifact, label, this));
+        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
         //add the label to the incidents panel
         incidents.add(label);
       }
@@ -213,16 +235,47 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   /**
    * Show information in the bottom panel about the provided artifact
    * @param artifact The artifact to show information about
+   * @param baseURL The base URL of the user
    */
-  public void showInformation(Artifact artifact) {
-    //removes everything currently stored in the bottomPanel
+  public void showInformation(Artifact artifact, String baseURL) {
+    //remove everything currently stored in the bottomPanel
     bottomPanel.removeAll();
     //show the name of the artifact as the title of the bottom panel
-    JBLabel title = new JBLabel("<HTML><h2>" + artifact.getName() + "</h2></HTML>");
+    JBLabel title = new JBLabel("<HTML><h2>" + artifact.getPrefix() + ":" + artifact.getArtifactId()
+                                + " - " + artifact.getName() + "</h2></HTML>");
+    //allow user to click title to take to SpiraTeam
+    title.addMouseListener(new HyperlinkListener(SpiraTeamUtil.getArtifactURI(artifact, baseURL), title));
     bottomPanel.add(title);
+    String type = artifact.getType();
+    //only show type if it is not null
+    if(type != null) {
+      JBLabel typeLbl = new JBLabel("Type: " + type);
+      bottomPanel.add(typeLbl);
+    }
+    JBLabel project = new JBLabel("Project: " + artifact.getProjectName());
+    bottomPanel.add(project);
+    String priority = artifact.getPriorityName();
+    //only show priority if it is not null
+    if(priority != null) {
+      JBLabel priorityLbl = new JBLabel("Priority: " + priority);
+      bottomPanel.add(priorityLbl);
+    }
+    //workflow status
+    String status = artifact.getStatus();
+    //only show status if it is not null
+    if(status != null) {
+      JBLabel statusLbl = new JBLabel("Status: " + status);
+      bottomPanel.add(statusLbl);
+    }
+    String description = artifact.getDescription();
+    //only show description if it is not null
+    if(description != null) {
+      JBLabel descriptionLbl = new JBLabel("<HTML>Description: " + description + "</HTML>");
+      bottomPanel.add(descriptionLbl);
+    }
+
     //need to show the changes
     bottomPanel.updateUI();
-
   }
 
   @Override
@@ -256,18 +309,16 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //add the split-screen to the tool window
     window.getComponent().add(splitter);
   }
-
+  //ignore the three methods below, they are not used
   @Override
   public void init(ToolWindow window) {
-    //do nothing
+    //not used
   }
-
   @Override
   public boolean shouldBeAvailable(@NotNull Project project) {
     //not used
     return false;
   }
-
   @Override
   public boolean isDoNotActivateOnStart() {
     //not used
@@ -332,24 +383,26 @@ class TreeListener implements MouseListener {
 /**
  * Allows users to click on labels and underlines the label when the user hovers over it
  */
-class LabelMouseListener implements MouseListener {
+class TopLabelMouseListener implements MouseListener {
   private Artifact artifact;
   private JBLabel label;
   /**
    * Used only to show information in the bottom panel when a label is clicked
    */
   private SpiraToolWindowFactory window;
+  private String baseURL;
 
-  public LabelMouseListener(Artifact artifact, JBLabel label, SpiraToolWindowFactory window) {
+  public TopLabelMouseListener(Artifact artifact, JBLabel label, SpiraToolWindowFactory window, String baseURL) {
     this.artifact = artifact;
     this.label = label;
     this.window = window;
+    this.baseURL = baseURL;
   }
 
   @Override
   public void mouseClicked(MouseEvent e) {
     //show additional information on the artifact in the bottom panel
-    window.showInformation(artifact);
+    window.showInformation(artifact, baseURL);
   }
 
   @Override
@@ -379,6 +432,7 @@ class LabelMouseListener implements MouseListener {
 
   /**
    * @return A JBPanel with information regarding to the current artifact
+   * @deprecated Popups are no longer used by the SpiraTeam Plugin
    */
   private JBPanel createPanel() {
     JBPanel panel = new JBPanel();
@@ -391,6 +445,58 @@ class LabelMouseListener implements MouseListener {
     panel.add(new JBLabel("<HTML>Description: " + artifact.getDescription() + "</HTML>"));
     return panel;
 
+  }
+
+  @Override
+  public void mouseExited(MouseEvent e) {
+    Font font = label.getFont();
+    Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
+    //-1 is the constant for no underline
+    attributes.put(TextAttribute.UNDERLINE, -1);
+    //setting the new font
+    label.setFont(font.deriveFont(attributes));
+    //set the cursor back to normal
+    label.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+  }
+}
+
+/**
+ * Used to open the given hyperlink when clicked
+ */
+class HyperlinkListener implements MouseListener {
+  URI uri;
+  JBLabel label;
+  public HyperlinkListener(URI uri, JBLabel label) {
+    this.uri = uri;
+    this.label = label;
+  }
+
+  @Override
+  public void mouseClicked(MouseEvent e) {
+    SpiraTeamUtil.openURL(uri);
+  }
+
+  @Override
+  public void mousePressed(MouseEvent e) {
+
+  }
+
+  @Override
+  public void mouseReleased(MouseEvent e) {
+
+  }
+
+  @Override
+  public void mouseEntered(MouseEvent e) {
+    Font font = label.getFont();
+    //create a Map with the attributes of the font
+    Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
+    //turning on the underline
+    attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+    //setting the new font
+    label.setFont(font.deriveFont(attributes));
+    //set the cursor to the hand
+    label.setCursor(new Cursor(Cursor.HAND_CURSOR));
   }
 
   @Override

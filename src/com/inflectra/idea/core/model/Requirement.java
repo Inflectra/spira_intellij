@@ -16,7 +16,7 @@
 package com.inflectra.idea.core.model;
 
 public class Requirement extends Artifact {
-  public Requirement(int projectId, String projectName, int artifactId, String name) {
-    super(projectId, projectName, artifactId, ArtifactType.REQUIREMENT, name);
+  public Requirement(int projectId, String projectName, int artifactId, String name, String priorityName) {
+    super(projectId, projectName, artifactId, ArtifactType.REQUIREMENT, name, priorityName);
   }
 }

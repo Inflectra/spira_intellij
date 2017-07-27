@@ -28,13 +28,48 @@ public abstract class Artifact {
   private int artifactId;
   private ArtifactType artifactType;
   private String description;
+  private String priorityName;
+  /**
+   * The current workflow status
+   */
+  private String status;
+  /**
+   * The type, ex change request, bug, feature, etc
+   */
+  private String type;
 
-  public Artifact(int projectId, String projectName, int artifactId, ArtifactType artifactType, String name) {
+  public Artifact(int projectId, String projectName, int artifactId, ArtifactType artifactType, String name, String priorityName) {
     this.projectId = projectId;
     this.artifactId = artifactId;
     this.artifactType = artifactType;
     this.name = name;
     this.projectName = projectName;
+    this.priorityName = priorityName;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public String getPriorityName() {
+    return priorityName;
+  }
+
+  /**
+   * @return The current workflow status
+   */
+  public String getStatus() {
+    return status;
+  }
+  /**
+   * @param status The new value for the workflow status property
+   */
+  public void setStatus(String status) {
+    this.status = status;
   }
 
   /**
@@ -62,8 +97,6 @@ public abstract class Artifact {
    * @return The description of the artifact
    */
   public String getDescription() {
-    if(description == null)
-      return "none";
     return description;
   }
 
