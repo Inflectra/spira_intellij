@@ -241,38 +241,50 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //remove everything currently stored in the bottomPanel
     bottomPanel.removeAll();
     //show the name of the artifact as the title of the bottom panel
-    JBLabel title = new JBLabel("<HTML><h2>" + artifact.getPrefix() + ":" + artifact.getArtifactId()
-                                + " - " + artifact.getName() + "</h2></HTML>");
+    JBLabel title = new JBLabel("<html><div><h2>" + artifact.getPrefix() + ":" + artifact.getArtifactId()
+                                + " - " + artifact.getName() + "</h2></div></html>");
     //allow user to click title to take to SpiraTeam
     title.addMouseListener(new HyperlinkListener(SpiraTeamUtil.getArtifactURI(artifact, baseURL), title));
     bottomPanel.add(title);
+    //label which will contain a table of all the values, removes the border
+    JBLabel table = new JBLabel("<html><style>th {padding-right: 20px; text-align: left;}</style><table border=\"0\">");
     String type = artifact.getType();
     //only show type if it is not null
     if(type != null) {
-      JBLabel typeLbl = new JBLabel("Type: " + type);
-      bottomPanel.add(typeLbl);
+      String text = table.getText();
+      text+="<tr>";
+      text+="<th>Type</th>";
+      text+="<td>" + type + "</td>";
+      text+="</tr>";
+      table.setText(text);
     }
-    JBLabel project = new JBLabel("Project: " + artifact.getProjectName());
-    bottomPanel.add(project);
-    String priority = artifact.getPriorityName();
-    //only show priority if it is not null
-    if(priority != null) {
-      JBLabel priorityLbl = new JBLabel("Priority: " + priority);
-      bottomPanel.add(priorityLbl);
+    String project = artifact.getProjectName();
+    if(project != null) {
+      String text = table.getText();
+      text+="<tr>";
+      text+="<th>Project</th>";
+      text+="<td>" + project + "</td>";
+      text+="</tr>";
+      table.setText(text);
     }
-    //workflow status
     String status = artifact.getStatus();
-    //only show status if it is not null
     if(status != null) {
-      JBLabel statusLbl = new JBLabel("Status: " + status);
-      bottomPanel.add(statusLbl);
+      String text = table.getText();
+      text+="<tr>";
+      text+="<th>Status</th>";
+      text+="<td>" + status + "</td>";
+      text+="</tr>";
+      table.setText(text);
     }
+    table.setText(table.getText() + "</table></html>");
+    bottomPanel.add(table);
+
     String description = artifact.getDescription();
-    //only show description if it is not null
     if(description != null) {
-      JBLabel descriptionLbl = new JBLabel("<HTML>Description: " + description + "</HTML>");
-      bottomPanel.add(descriptionLbl);
+      JBLabel descriptionLabel = new JBLabel("<html><strong>Description:</strong><br><div style=\"word-wrap: normal\">" + description + "</div></html>");
+      bottomPanel.add(descriptionLabel);
     }
+
 
     //need to show the changes
     bottomPanel.updateUI();
@@ -488,26 +500,22 @@ class HyperlinkListener implements MouseListener {
 
   @Override
   public void mouseEntered(MouseEvent e) {
-    Font font = label.getFont();
-    //create a Map with the attributes of the font
-    Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
-    //turning on the underline
-    attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-    //setting the new font
-    label.setFont(font.deriveFont(attributes));
-    //set the cursor to the hand
-    label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    String oldText = label.getText();
+    int startLoc = oldText.indexOf("<h2>");
+    int endLoc = oldText.indexOf("</h2>");
+    //add in the underline tag between the h2 tags
+    String newText = oldText.substring(0, startLoc + 4) + "<u>" +
+                     oldText.substring(startLoc+4, endLoc) + "</u>" + oldText.substring(endLoc);
+    label.setText(newText);
   }
 
   @Override
   public void mouseExited(MouseEvent e) {
-    Font font = label.getFont();
-    Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
-    //-1 is the constant for no underline
-    attributes.put(TextAttribute.UNDERLINE, -1);
-    //setting the new font
-    label.setFont(font.deriveFont(attributes));
-    //set the cursor back to normal
-    label.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+    String oldText = label.getText();
+    int startLoc = oldText.indexOf("<u>");
+    int endLoc = oldText.indexOf("</u>");
+    //remove the underline tags
+    String newText = oldText.substring(0, startLoc) + oldText.substring(startLoc+3, endLoc) + oldText.substring(endLoc+4);
+    label.setText(newText);
   }
 }

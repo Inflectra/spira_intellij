@@ -46,11 +46,24 @@ public class Test {
       //test.json();
       //test.credentials();
       //test.rest();
-      test.scroll();
+      //test.scroll();
+      test.underline();
     }
     catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void underline() {
+    String s = "<HTML><h2>Test</h2></HTML>";
+    int startLoc = s.indexOf("<h2>");
+    int endLoc = s.indexOf("</h2>");
+    s = s.substring(0, startLoc + 4) + "<u>" + s.substring(startLoc+4, endLoc) + "</u>" + s.substring(endLoc);
+
+    startLoc = s.indexOf("<u>");
+    endLoc = s.indexOf("</u>");
+    s = s.substring(0, startLoc) + s.substring(startLoc+3, endLoc) + s.substring(endLoc+4);
+    System.out.println(s);
   }
 
   private void scroll() {
