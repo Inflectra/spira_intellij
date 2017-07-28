@@ -19,6 +19,7 @@ import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
+import com.intellij.ui.components.JBLabel;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -29,11 +30,13 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
   private JTextField username;
   private JTextField rssToken;
   private SpiraTeamCredentials credentials;
+  private Project project;
 
 
   public SpiraTeamLoginDialog(Project project, String title, SpiraTeamCredentials credentials) {
     super(project);
     this.credentials = credentials;
+    this.project = project;
     init();
     setTitle(title);
   }
@@ -73,7 +76,7 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     this.credentials.setUrl(url.getText());
     this.credentials.setUsername(username.getText());
     this.credentials.setToken(rssToken.getText());
-    this.credentials.saveCredentials();
+    SpiraToolWindowFactory.reload(project);
     super.doOKAction();
   }
 
@@ -82,14 +85,21 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     if (url.getText() == null || url.getText().equals("")) {
       return new ValidationInfo("You must enter a URL", url);
     }
+    else if(url.getText().endsWith("/")) {
+      return new ValidationInfo("Your URL cannot end with a '/'", url);
+    }
     if (username.getText() == null || username.getText().equals("")) {
       return new ValidationInfo("You must enter a username", username);
     }
     if (rssToken.getText() == null || rssToken.getText().equals("")) {
       return new ValidationInfo("You must enter an RSS Token", rssToken);
     }
+    else if(!(rssToken.getText().endsWith("}"))) {
+      return new ValidationInfo("You must include the curly braces in your token", rssToken);
+    }
     return null;
   }
+
 
   @Nullable
   @Override

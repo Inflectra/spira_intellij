@@ -24,6 +24,7 @@ import com.inflectra.idea.core.model.Artifact;
 import com.inflectra.idea.core.model.Incident;
 import com.inflectra.idea.core.model.Requirement;
 import com.inflectra.idea.core.model.Task;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -62,8 +63,13 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    * Contains information about the currently selected artifact
    */
   private JBPanel bottomPanel;
+  /**
+   * The current instance of SpiraToolWindowFactory
+   */
+  private static SpiraToolWindowFactory instance;
 
   public SpiraToolWindowFactory() {
+    instance = this;
     topPanel = new JBPanel();
     topPanel.setBorder(new EmptyBorder(5, 10, 5, 10));
     //make the panel lay out its children vertically, instead of horizontally
@@ -73,6 +79,34 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     bottomPanel.setBorder(new EmptyBorder(5,10,5,10));
     //make the panel lay out its children vertically, instead of horizontally
     bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+  }
+
+  public static void reload(Project project) {
+    SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
+    try {
+      instance.topPanel.removeAll();
+      instance.addRequirements(credentials);
+      //add tasks to the top panel
+      instance.addTasks(credentials);
+      //add incidents to the top panel
+      instance.addIncidents(credentials);
+    }
+    catch(IOException e) {
+      instance.showLogin(project);
+    }
+  }
+
+  private void showLogin(Project project) {
+    topPanel.add(new JBLabel("<html><h2>Not what you were looking for?</h2></html>"));
+    topPanel.add(new JBLabel("Your authentication credentials may be wrong."));
+    topPanel.add(new JBLabel("Please verify them by clicking the button below"));
+    JButton button = new JButton("View Credentials");
+    button.addActionListener(l -> {
+      SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, "SpiraTeam Login",
+                                                             ServiceManager.getService(SpiraTeamCredentials.class));
+      dialog.show();
+    });
+    topPanel.add(button);
   }
 
   /**
@@ -292,19 +326,20 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
 
   @Override
   public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow window) {
-    SpiraTeamCredentials credentials = SpiraTeamCredentials.loadCredentials();
-    //SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
-    System.out.println(credentials);
+    SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     try {
-      //add requirements to the top panel
-      addRequirements(credentials);
-      //add tasks to the top panel
-      addTasks(credentials);
-      //add incidents to the top panel
-      addIncidents(credentials);
+      if(credentials != null) {
+        //add requirements to the top panel
+        addRequirements(credentials);
+        //add tasks to the top panel
+        addTasks(credentials);
+        //add incidents to the top panel
+        addIncidents(credentials);
+      }
     }
     catch (Exception e) {
-      e.printStackTrace();
+      //prompt the user to re-enter authentication information
+      showLogin(project);
     }
     //enable scrolling
     JBScrollPane topScroll = new JBScrollPane(topPanel);

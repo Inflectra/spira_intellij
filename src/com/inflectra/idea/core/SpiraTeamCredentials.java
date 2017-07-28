@@ -18,28 +18,21 @@ package com.inflectra.idea.core;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.Scanner;
 
 /**
  * Class which represents the username, RSS token and base URL to access SpiraTeam
  *
  * @author peter.geertsema
  */
-@State(name = "SpiraTeamCredentials",
-  storages = {
-    @Storage(StoragePathMacros.WORKSPACE_FILE)
-  })
+@State(name = "SpiraTeamCredentials", storages =
+  @Storage(
+    id="credentials",
+    file = "$APP_CONFIG$/credentialspersist.xml")
+  )
 public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamCredentials.State> {
-  class State {
-    public State() {
-    }
-
+  static class State {
     /**
      * The username of the user
      */
@@ -53,16 +46,18 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
      */
     private String url;
 
+    public State() {
+
+    }
+
     @Override
     public boolean equals(Object other) {
-      if (!(other instanceof State)) {
+      if(!(other instanceof State))
         return false;
-      }
-      State otherS = (State)other;
-      return username.equals(otherS.username) && token.equals(otherS.token) && url.equals(otherS.token);
+      State s = (State)other;
+      return s.username.equals(username) && s.token.equals(token) && s.url.equals(url);
     }
   }
-
   State state;
 
   /**
@@ -72,64 +67,20 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
     state = new State();
   }
 
-  public static SpiraTeamCredentials loadCredentials() {
-    SpiraTeamCredentials out = new SpiraTeamCredentials();
-    try {
-      Scanner reader = new Scanner(new File(SpiraTeamCredentials.class.getResource("credentials.txt").getPath()));
-      out.setUrl(reader.nextLine());
-      out.setUsername(reader.nextLine());
-      out.setToken(reader.nextLine());
-      reader.close();
-    }
-    catch (Exception e) {
-      e.printStackTrace();
-    }
-    return out;
-  }
-
-  public void saveCredentials() {
-    try {
-      PrintWriter writer = new PrintWriter(getClass().getResource("credentials.txt").getPath());
-      writer.println(this.getUrl());
-      writer.println(this.getUsername());
-      writer.println(this.getToken());
-      writer.close();
-    }
-    catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  /*@Override
-  public void initComponent() {
-    // TODO: insert component initialization logic here
-  }
-
-  @Override
-  public void disposeComponent() {
-    // TODO: insert component disposal logic here
-  }
-
-  @Override
-  @NotNull
-  public String getComponentName() {
-    return "SpiraTeamCredentials";
-  }*/
 
   @Nullable
   @Override
   public SpiraTeamCredentials.State getState() {
-    return state;
+    return this.state;
   }
 
   @Override
-  public void loadState(SpiraTeamCredentials.State state) {
-    XmlSerializerUtil.copyBean(state, this);
+  public void loadState(SpiraTeamCredentials.State credentials) {
+    XmlSerializerUtil.copyBean(credentials, this);
   }
 
-
   public String getUsername() {
-    return this.state.username;
+    return state.username;
   }
 
   public void setUsername(String username) {
@@ -137,7 +88,7 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
   }
 
   public String getToken() {
-    return this.state.token;
+    return state.token;
   }
 
   public void setToken(String token) {
@@ -145,7 +96,7 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
   }
 
   public String getUrl() {
-    return this.state.url;
+    return state.url;
   }
 
   public void setUrl(String url) {
@@ -154,6 +105,8 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
 
   @Override
   public String toString() {
-    return "username: " + this.state.username + " RSS Token: " + this.state.token + " URL: " + this.state.url;
+    return "username: " + getUsername() + " RSS Token: " + getToken() + " URL: " + getUrl();
   }
+
+
 }

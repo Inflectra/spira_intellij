@@ -40,7 +40,7 @@ public class Test {
   SpiraTeamCredentials credentials;
 
   public Test() {
-    credentials = SpiraTeamCredentials.loadCredentials();
+    //credentials = SpiraTeamCredentials.loadCredentials();
   }
 
   public static void main(String[] args) {

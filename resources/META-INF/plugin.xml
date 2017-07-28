@@ -26,10 +26,10 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <toolWindow id="SpiraTeam Window" icon="/icons/spira-icon.png" anchor="left"
+    <toolWindow id="SpiraTeam Window" icon="/icons/spira-icon.png" anchor="right"
                 factoryClass="com.inflectra.idea.ui.SpiraToolWindowFactory"/>
-    <applicationService serviceImplementation="com.inflectra.idea.core.SpiraTeamCredentials"
-                        serviceInterface="com.inflectra.idea.core.SpiraTeamCredentials"/>
+    <applicationService  serviceInterface="com.inflectra.idea.core.SpiraTeamCredentials.State"
+                         serviceImplementation="com.inflectra.idea.core.SpiraTeamCredentials.State"/>
   </extensions>
   <application-components>
     <component>
