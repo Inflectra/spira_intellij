@@ -34,6 +34,9 @@ import java.util.ArrayList;
  * @author peter.geertsema
  */
 public class Test {
+  static String expandButton = "▶";
+  static String collapseButton = "▼";
+
   SpiraTeamCredentials credentials;
 
   public Test() {
@@ -47,11 +50,27 @@ public class Test {
       //test.credentials();
       //test.rest();
       //test.scroll();
-      test.underline();
+      //test.underline();
+      test.expand();
     }
     catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void expand() {
+    String text = "<html><h2>Text</h2></html>";
+    int startLoc = text.indexOf("<h2>") + 4;
+    text = text.substring(0, startLoc) + expandButton + text.substring(startLoc);
+    System.out.println(text);
+
+    startLoc = text.indexOf(expandButton);
+    text = text.substring(0, startLoc) + collapseButton + text.substring(startLoc + 1);
+    System.out.println(text);
+
+    startLoc = text.indexOf(collapseButton);
+    text = text.substring(0, startLoc) + expandButton + text.substring(startLoc + 1);
+    System.out.println(text);
   }
 
   private void underline() {

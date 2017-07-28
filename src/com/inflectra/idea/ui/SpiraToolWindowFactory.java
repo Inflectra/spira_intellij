@@ -87,7 +87,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //only show requirements if there are any assigned to the user
     if(list.size() > 0) {
       //title label for requirements
-      JBLabel requirementsLabel = new JBLabel("<HTML><h2>Requirements</h2></HTML>");
+      JBLabel requirementsLabel = new JBLabel("<html><h2>Requirements</h2></html>");
       //add the label to the top panel
       topPanel.add(requirementsLabel);
       //panel which fits under the "Requirements" label which will contain artifact names
@@ -123,7 +123,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         requirements.add(label);
       }
       //allow the user to click on the big requirement label to expand/collapse the artifact names
-      requirementsLabel.addMouseListener(new TreeListener(requirements));
+      requirementsLabel.addMouseListener(new TreeListener(requirements, requirementsLabel));
     }
   }
 
@@ -138,7 +138,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
     //only add if there are assigned tasks
     if(list.size() > 0) {
-      JBLabel tasksLabel = new JBLabel("<HTML><h2>Tasks</h2></HTML>");
+      JBLabel tasksLabel = new JBLabel("<html><h2>Tasks</h2></html>");
       topPanel.add(tasksLabel);
       JBPanel tasks = new JBPanel();
       tasks.setBorder(new EmptyBorder(0, 10, 0, 0));
@@ -168,7 +168,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         tasks.add(label);
       }
       //enable expand/collapse features
-      tasksLabel.addMouseListener(new TreeListener(tasks));
+      tasksLabel.addMouseListener(new TreeListener(tasks, tasksLabel));
     }
   }
 
@@ -183,7 +183,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //only add incidents if there is at least one returned from the REST request
     if(list.size() > 0) {
       //incidents 'parent' label
-      JBLabel incidentsLabel = new JBLabel("<HTML><h2>Incidents</h2></HTML>");
+      JBLabel incidentsLabel = new JBLabel("<html><h2>Incidents</h2></html>");
       //add the title to the panel
       topPanel.add(incidentsLabel);
       //create a panel which will fit under the big incidentsLabel
@@ -228,7 +228,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       }
       //add a TreeListener (see below) to the label, passing in the panel
       //this listener shows the incidents panel when the incidents label is pressed
-      incidentsLabel.addMouseListener(new TreeListener(incidents));
+      incidentsLabel.addMouseListener(new TreeListener(incidents, incidentsLabel));
     }
   }
 
@@ -343,11 +343,20 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
  * <p>When the user clicks the given label, the panel passed in with the artifact names is expanded</p>
  */
 class TreeListener implements MouseListener {
+  private static String expandButton = "▶ ";
+  private static String collapseButton = "▼ ";
   JBPanel panel;
+  JBLabel label;
   boolean isExpanded = false;
 
-  public TreeListener(JBPanel panel) {
+  public TreeListener(JBPanel panel, JBLabel label) {
     this.panel = panel;
+    this.label = label;
+    //add the expand button
+    String text = label.getText();
+    int startLoc = text.indexOf("<h2>") + 4;
+    text = text.substring(0, startLoc) + "<span style=\"font-size: .6em\">" + expandButton + "</span>" + text.substring(startLoc);
+    label.setText(text);
     //make panel invisible by default
     panel.setVisible(false);
   }
@@ -362,12 +371,22 @@ class TreeListener implements MouseListener {
       //hide the artifacts
       panel.setVisible(false);
       isExpanded = false;
+      //turn the collapse button into an expand button
+      String text = label.getText();
+      int startLoc = text.indexOf(collapseButton);
+      text = text.substring(0, startLoc) + expandButton + text.substring(startLoc + collapseButton.length());
+      label.setText(text);
     }
     //show the list if it is not expanded
     else {
       //show the artifacts
       panel.setVisible(true);
       isExpanded = true;
+      //turn the expand button into a collapse button
+      String text = label.getText();
+      int startLoc = text.indexOf(expandButton);
+      text = text.substring(0, startLoc) + collapseButton + text.substring(startLoc + expandButton.length());
+      label.setText(text);
     }
   }
 
@@ -453,8 +472,8 @@ class TopLabelMouseListener implements MouseListener {
     //contains the artifact prefix and ID as well as the project
     JBLabel title = new JBLabel(artifact.getPrefix() + ":" + artifact.getArtifactId() + "   Project: " + artifact.getProjectName());
     panel.add(title);
-    //contains the description, wrapped in HTML as Description supports rich text
-    panel.add(new JBLabel("<HTML>Description: " + artifact.getDescription() + "</HTML>"));
+    //contains the description, wrapped in html as Description supports rich text
+    panel.add(new JBLabel("<html>Description: " + artifact.getDescription() + "</html>"));
     return panel;
 
   }
@@ -507,6 +526,7 @@ class HyperlinkListener implements MouseListener {
     String newText = oldText.substring(0, startLoc + 4) + "<u>" +
                      oldText.substring(startLoc+4, endLoc) + "</u>" + oldText.substring(endLoc);
     label.setText(newText);
+    label.setCursor(new Cursor(Cursor.HAND_CURSOR));
   }
 
   @Override
@@ -517,5 +537,6 @@ class HyperlinkListener implements MouseListener {
     //remove the underline tags
     String newText = oldText.substring(0, startLoc) + oldText.substring(startLoc+3, endLoc) + oldText.substring(endLoc+4);
     label.setText(newText);
+    label.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
   }
 }
