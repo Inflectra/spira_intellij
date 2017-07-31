@@ -19,21 +19,29 @@ import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 
+/**
+ * Action which allows the user to log into SpiraTeam
+ * @author peter.geertsema
+ */
 public class SpiraTeamLogin extends AnAction {
 
   private SpiraTeamCredentials credentials;
 
   public SpiraTeamLogin() {
-    super("SpiraTeamLogin");
-    credentials = SpiraTeamCredentials.loadCredentials();
+    super("SpiraTeam Login");
+    credentials = ServiceManager.getService(SpiraTeamCredentials.class);
   }
 
   @Override
   public void actionPerformed(AnActionEvent event) {
+    //get the project associated with the event
     Project project = event.getData(PlatformDataKeys.PROJECT);
+    //prompt the user to log in
     SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, "SpiraTeam Login", credentials);
+    //show the dialog
     dialog.show();
   }
 }

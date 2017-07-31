@@ -17,20 +17,17 @@ package com.inflectra.idea.ui;
 
 import com.inflectra.idea.core.model.Artifact;
 import com.intellij.openapi.ui.popup.*;
-import com.intellij.openapi.util.Computable;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.popup.AbstractPopup;
 import com.intellij.util.Processor;
 
 import javax.swing.*;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
+/**
+ * A popup to be used by SpiraTeam
+ * <p>Only allows one open popup at a time</p>
+ * @author peter.geertsema
+ * @deprecated Popups are no longer in use by SpiraTeam
+ */
 public class SpiraTeamPopup {
   private boolean isPinned = false;
   private ComponentPopupBuilder popupBuilder;
@@ -69,6 +66,10 @@ public class SpiraTeamPopup {
     openPopup = this;
   }
 
+  /**
+   * Not used anymore, ignore
+   * @deprecated No longer in use
+   */
   private void addPopupListener() {
     popup.addListener(new JBPopupListener() {
       @Override
@@ -101,7 +102,6 @@ public class SpiraTeamPopup {
     popupBuilder.setCouldPin(new Processor<JBPopup>() {
       @Override
       public boolean process(JBPopup popup) {
-        popup.moveToFitScreen();
         return true;
       }
     });
@@ -113,6 +113,9 @@ public class SpiraTeamPopup {
     return popupBuilder.createPopup();
   }
 
+  /**
+   * Closes the popup
+   */
   public void cancel() {
     popup.cancel();
   }

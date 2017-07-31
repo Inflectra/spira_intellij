@@ -15,6 +15,10 @@
  */
 package com.inflectra.idea.core.model;
 
+/**
+ * Enum which contains the different artifact types
+ * @author peter.geertsema
+ */
 public enum ArtifactType {
   REQUIREMENT("Requirement"),
   INCIDENT("Incident"),

@@ -15,8 +15,13 @@
  */
 package com.inflectra.idea.core.model;
 
+/**
+ * Represents a Task in Spira
+ * @author peter.geertsema
+ */
 public class Task extends Artifact {
-  public Task(int projectId, String projectName, int artifactId, String name) {
-    super(projectId, projectName, artifactId, ArtifactType.TASK, name);
+
+  public Task(int projectId, String projectName, int artifactId, String name, String priorityName) {
+    super(projectId, projectName, artifactId, ArtifactType.TASK, name, priorityName);
   }
 }
