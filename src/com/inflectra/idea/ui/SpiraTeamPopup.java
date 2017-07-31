@@ -17,19 +17,10 @@ package com.inflectra.idea.ui;
 
 import com.inflectra.idea.core.model.Artifact;
 import com.intellij.openapi.ui.popup.*;
-import com.intellij.openapi.util.Computable;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.popup.AbstractPopup;
 import com.intellij.util.Processor;
 
 import javax.swing.*;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * A popup to be used by SpiraTeam

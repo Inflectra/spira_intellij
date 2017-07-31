@@ -25,16 +25,15 @@ import com.inflectra.idea.core.model.Incident;
 import com.inflectra.idea.core.model.Requirement;
 import com.inflectra.idea.core.model.Task;
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.editor.impl.ColorProvider;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.components.JBScrollBar;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.content.Content;
-import com.intellij.ui.content.ContentManager;
+import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -98,6 +97,9 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     catch(IOException e) {
       instance.showLogin(project);
     }
+    finally {
+      instance.topPanel.updateUI();
+    }
   }
 
   /**
@@ -114,6 +116,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       dialog.show();
     });
     topPanel.add(button);
+    //update the changes
+    topPanel.updateUI();
   }
 
   /**
@@ -289,34 +293,25 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     bottomPanel.add(title);
     //label which will contain a table of all the values. Has no border
     JBLabel table = new JBLabel("<html><style>th {padding-right: 20px; text-align: left;}</style><table border=\"0\">");
+
     String type = artifact.getType();
     //only show type if it is not null
     if(type != null) {
-      String text = table.getText();
-      text+="<tr>";
-      text+="<th>Type</th>";
-      text+="<td>" + type + "</td>";
-      text+="</tr>";
-      table.setText(text);
+      addContentToTable(table, "Type", type);
     }
     String project = artifact.getProjectName();
     if(project != null) {
-      String text = table.getText();
-      text+="<tr>";
-      text+="<th>Project</th>";
-      text+="<td>" + project + "</td>";
-      text+="</tr>";
-      table.setText(text);
+      addContentToTable(table, "Project", project);
     }
     String status = artifact.getStatus();
     if(status != null) {
-      String text = table.getText();
-      text+="<tr>";
-      text+="<th>Status</th>";
-      text+="<td>" + status + "</td>";
-      text+="</tr>";
-      table.setText(text);
+      addContentToTable(table, "Status", status);
     }
+    String priority = artifact.getPriorityName();
+    if(priority != null) {
+      addContentToTable(table, "Priority", priority);
+    }
+    //end the table
     table.setText(table.getText() + "</table></html>");
     bottomPanel.add(table);
     //show description separately
@@ -331,10 +326,26 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   }
 
   /**
+   * Utility method used to add the given header and data to the table contained in the label
+   * @param table The table to add the content to
+   * @param header The name of the property to be shown
+   * @param data The data associated with the header
+   */
+  private static void addContentToTable(JBLabel table, String header, String data) {
+    String text = table.getText();
+    text+="<tr>";
+    text+="<th>" + header + "</th>";
+    text+="<td>" + data + "</td>";
+    text+="</tr>";
+    table.setText(text);
+  }
+
+  /**
    * Builds the SpiraTeam Window content when the application is launched
    */
   @Override
   public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow window) {
+    //get the credentials from the IDE
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     try {
       if(credentials != null) {
@@ -345,6 +356,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         //add incidents to the top panel
         addIncidents(credentials);
       }
+      else
+        showLogin(project);
     }
     catch (Exception e) {
       //prompt the user to re-enter authentication information
@@ -402,6 +415,9 @@ class TreeListener implements MouseListener {
     //add in the expand button, which is smaller than the rest of the text
     text = text.substring(0, startLoc) + "<span style=\"font-size: .6em\">" + expandButton + "</span>" + text.substring(startLoc);
     label.setText(text);
+    //make the header color inactive by default
+    Color color = UIUtil.getHeaderInactiveColor();
+    label.setForeground(color);
     //make panel invisible by default
     panel.setVisible(false);
   }
@@ -422,6 +438,9 @@ class TreeListener implements MouseListener {
       text = text.substring(0, startLoc) + expandButton + text.substring(startLoc + collapseButton.length());
       //apply the changes to the label
       label.setText(text);
+      //make the header color be inactive
+      Color color = UIUtil.getHeaderInactiveColor();
+      label.setForeground(color);
     }
     //show the list if it is not expanded
     else {
@@ -434,6 +453,9 @@ class TreeListener implements MouseListener {
       text = text.substring(0, startLoc) + collapseButton + text.substring(startLoc + expandButton.length());
       //apply the changes to the label
       label.setText(text);
+      //make the header color be active
+      Color color = UIUtil.getHeaderActiveColor();
+      label.setForeground(color);
     }
   }
 
@@ -449,12 +471,20 @@ class TreeListener implements MouseListener {
 
   @Override
   public void mouseEntered(MouseEvent e) {
-
+    //only change color if it is not expanded
+    if(!isExpanded) {
+      Color color = UIUtil.getHeaderActiveColor();
+      label.setForeground(color);
+    }
   }
 
   @Override
   public void mouseExited(MouseEvent e) {
-    //do nothing
+    //only change color if it is not expanded
+    if(!isExpanded) {
+      Color color = UIUtil.getHeaderInactiveColor();
+      label.setForeground(color);
+    }
   }
 }
 
@@ -553,6 +583,9 @@ class HyperlinkListener implements MouseListener {
   public HyperlinkListener(URI uri, JBLabel label) {
     this.uri = uri;
     this.label = label;
+    //make the header have the inactive color by default
+    Color color = UIUtil.getHeaderInactiveColor();
+    label.setForeground(color);
   }
 
   @Override
@@ -563,12 +596,12 @@ class HyperlinkListener implements MouseListener {
 
   @Override
   public void mousePressed(MouseEvent e) {
-
+    //do nothing
   }
 
   @Override
   public void mouseReleased(MouseEvent e) {
-
+    //do nothing
   }
 
   /**
@@ -584,6 +617,10 @@ class HyperlinkListener implements MouseListener {
                      oldText.substring(startLoc+4, endLoc) + "</u>" + oldText.substring(endLoc);
     //apply the changes to the label
     label.setText(newText);
+    //set the color to be the active color, depending on the theme
+    Color color = UIUtil.getHeaderActiveColor();
+    label.setForeground(color);
+    //change the cursor
     label.setCursor(new Cursor(Cursor.HAND_CURSOR));
   }
 
@@ -599,6 +636,10 @@ class HyperlinkListener implements MouseListener {
     String newText = oldText.substring(0, startLoc) + oldText.substring(startLoc+3, endLoc) + oldText.substring(endLoc+4);
     //apply the changes to the label
     label.setText(newText);
+    //set the color to be the inactive color, depending on the theme
+    Color color = UIUtil.getHeaderInactiveColor();
+    label.setForeground(color);
+    //change the cursor
     label.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
   }
 }

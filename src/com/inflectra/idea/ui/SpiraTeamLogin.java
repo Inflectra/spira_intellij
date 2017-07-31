@@ -31,7 +31,7 @@ public class SpiraTeamLogin extends AnAction {
   private SpiraTeamCredentials credentials;
 
   public SpiraTeamLogin() {
-    super("SpiraTeamLogin");
+    super("SpiraTeam Login");
     credentials = ServiceManager.getService(SpiraTeamCredentials.class);
   }
 
