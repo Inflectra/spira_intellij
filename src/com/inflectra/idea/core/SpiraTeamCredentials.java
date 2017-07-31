@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Class which represents the username, RSS token and base URL to access SpiraTeam
- *
  * @author peter.geertsema
  */
 @State(name = "SpiraTeamCredentials", storages =
@@ -62,6 +61,10 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
       return s.username.equals(username) && s.token.equals(token) && s.url.equals(url);
     }
   }
+
+  /**
+   * Stores an instance of a State object, which is a wrapper class for the authentication information
+   */
   public State state;
 
   /**
@@ -75,14 +78,17 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
   @Nullable
   @Override
   public SpiraTeamCredentials getState() {
+    //called when the application is closed. The data is then written to the disk
     return this;
   }
 
   @Override
   public void loadState(SpiraTeamCredentials credentials) {
+    //the instance is passed back in when the application is opened, allowing persisting credentials
     XmlSerializerUtil.copyBean(credentials, this);
   }
 
+  //begin getters and setters
   public String getUsername() {
     return state.username;
   }
@@ -111,6 +117,4 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
   public String toString() {
     return "username: " + getUsername() + " RSS Token: " + getToken() + " URL: " + getUrl();
   }
-
-
 }

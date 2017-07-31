@@ -24,6 +24,10 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
+/**
+ * Contains the GUI used for logging in
+ * @author peter.geertsema
+ */
 public class SpiraTeamLoginDialog extends DialogWrapper {
 
   private JTextField url;
@@ -37,6 +41,7 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     super(project);
     this.credentials = credentials;
     this.project = project;
+    //initialize the dialog
     init();
     setTitle(title);
   }
@@ -48,20 +53,23 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     JPanel out = new JPanel();
     //ensuring the components are layed out vertically
     out.setLayout(new BoxLayout(out, BoxLayout.Y_AXIS));
-
+    //URL text field
     url = new JTextField(30);
+    //show the URL stored in credentials if it exists
     if (credentials.getUrl() != null) {
       url.setText(credentials.getUrl());
     }
     out.add(new JLabel("SpiraTeam URL:"));
     out.add(url);
     username = new JTextField(30);
+    //show the username stored in credentials if it exists
     if (credentials.getUsername() != null) {
       username.setText(credentials.getUsername());
     }
     out.add(new JLabel("Username:"));
     out.add(username);
     rssToken = new JTextField(30);
+    //show the RSS Token stored in credentials if it exists
     if (credentials.getToken() != null) {
       rssToken.setText(credentials.getToken());
     }
@@ -71,15 +79,23 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     return out;
   }
 
+  /**
+   * Called when the OK button is clicked
+   */
   @Override
   protected void doOKAction() {
+    //need to store the new credentials
     this.credentials.setUrl(url.getText());
     this.credentials.setUsername(username.getText());
     this.credentials.setToken(rssToken.getText());
+    //reload the SpiraTeam Window
     SpiraToolWindowFactory.reload(project);
     super.doOKAction();
   }
 
+  /**
+   * Ensures that the information entered is valid
+   */
   @Override
   protected ValidationInfo doValidate() {
     if (url.getText() == null || url.getText().equals("")) {

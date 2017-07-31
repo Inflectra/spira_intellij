@@ -15,7 +15,12 @@
  */
 package com.inflectra.idea.core.model;
 
+/**
+ * Represents a Requirement in Spira
+ * @author peter.geertsema
+ */
 public class Requirement extends Artifact {
+
   public Requirement(int projectId, String projectName, int artifactId, String name, String priorityName) {
     super(projectId, projectName, artifactId, ArtifactType.REQUIREMENT, name, priorityName);
   }

@@ -81,9 +81,13 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
   }
 
+  /**
+   * Reloads the contents of the SpiraTeam Window
+   */
   public static void reload(Project project) {
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     try {
+      //clear the top panel
       instance.topPanel.removeAll();
       instance.addRequirements(credentials);
       //add tasks to the top panel
@@ -96,6 +100,9 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     }
   }
 
+  /**
+   * Shows the screen which informs the user that their credentials are invalid
+   */
   private void showLogin(Project project) {
     topPanel.add(new JBLabel("<html><h2>Not what you were looking for?</h2></html>"));
     topPanel.add(new JBLabel("Your authentication credentials may be wrong."));
@@ -280,7 +287,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //allow user to click title to take to SpiraTeam
     title.addMouseListener(new HyperlinkListener(SpiraTeamUtil.getArtifactURI(artifact, baseURL), title));
     bottomPanel.add(title);
-    //label which will contain a table of all the values, removes the border
+    //label which will contain a table of all the values. Has no border
     JBLabel table = new JBLabel("<html><style>th {padding-right: 20px; text-align: left;}</style><table border=\"0\">");
     String type = artifact.getType();
     //only show type if it is not null
@@ -312,18 +319,20 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     }
     table.setText(table.getText() + "</table></html>");
     bottomPanel.add(table);
-
+    //show description separately
     String description = artifact.getDescription();
     if(description != null) {
       JBLabel descriptionLabel = new JBLabel("<html><strong>Description:</strong><br><div style=\"word-wrap: normal\">" + description + "</div></html>");
       bottomPanel.add(descriptionLabel);
     }
 
-
     //need to show the changes
     bottomPanel.updateUI();
   }
 
+  /**
+   * Builds the SpiraTeam Window content when the application is launched
+   */
   @Override
   public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow window) {
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
@@ -390,6 +399,7 @@ class TreeListener implements MouseListener {
     //add the expand button
     String text = label.getText();
     int startLoc = text.indexOf("<h2>") + 4;
+    //add in the expand button, which is smaller than the rest of the text
     text = text.substring(0, startLoc) + "<span style=\"font-size: .6em\">" + expandButton + "</span>" + text.substring(startLoc);
     label.setText(text);
     //make panel invisible by default
@@ -410,6 +420,7 @@ class TreeListener implements MouseListener {
       String text = label.getText();
       int startLoc = text.indexOf(collapseButton);
       text = text.substring(0, startLoc) + expandButton + text.substring(startLoc + collapseButton.length());
+      //apply the changes to the label
       label.setText(text);
     }
     //show the list if it is not expanded
@@ -421,6 +432,7 @@ class TreeListener implements MouseListener {
       String text = label.getText();
       int startLoc = text.indexOf(expandButton);
       text = text.substring(0, startLoc) + collapseButton + text.substring(startLoc + expandButton.length());
+      //apply the changes to the label
       label.setText(text);
     }
   }
@@ -481,6 +493,10 @@ class TopLabelMouseListener implements MouseListener {
     //do nothing
   }
 
+  /**
+   * Create an underline on the panel when hovered over
+   * @param e
+   */
   @Override
   public void mouseEntered(MouseEvent e) {
     Font font = label.getFont();
@@ -492,8 +508,6 @@ class TopLabelMouseListener implements MouseListener {
     label.setFont(font.deriveFont(attributes));
     //set the cursor to the hand
     label.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-    //popup = new SpiraTeamPopup(createPanel(), label, artifact);
   }
 
   /**
@@ -513,6 +527,9 @@ class TopLabelMouseListener implements MouseListener {
 
   }
 
+  /**
+   * Remove the underline
+   */
   @Override
   public void mouseExited(MouseEvent e) {
     Font font = label.getFont();
@@ -532,6 +549,7 @@ class TopLabelMouseListener implements MouseListener {
 class HyperlinkListener implements MouseListener {
   URI uri;
   JBLabel label;
+
   public HyperlinkListener(URI uri, JBLabel label) {
     this.uri = uri;
     this.label = label;
@@ -539,6 +557,7 @@ class HyperlinkListener implements MouseListener {
 
   @Override
   public void mouseClicked(MouseEvent e) {
+    //open the url
     SpiraTeamUtil.openURL(uri);
   }
 
@@ -552,6 +571,9 @@ class HyperlinkListener implements MouseListener {
 
   }
 
+  /**
+   * Uses HTML to add in an underline to the label
+   */
   @Override
   public void mouseEntered(MouseEvent e) {
     String oldText = label.getText();
@@ -560,10 +582,14 @@ class HyperlinkListener implements MouseListener {
     //add in the underline tag between the h2 tags
     String newText = oldText.substring(0, startLoc + 4) + "<u>" +
                      oldText.substring(startLoc+4, endLoc) + "</u>" + oldText.substring(endLoc);
+    //apply the changes to the label
     label.setText(newText);
     label.setCursor(new Cursor(Cursor.HAND_CURSOR));
   }
 
+  /**
+   * Removes the HTML which underlines the label
+   */
   @Override
   public void mouseExited(MouseEvent e) {
     String oldText = label.getText();
@@ -571,6 +597,7 @@ class HyperlinkListener implements MouseListener {
     int endLoc = oldText.indexOf("</u>");
     //remove the underline tags
     String newText = oldText.substring(0, startLoc) + oldText.substring(startLoc+3, endLoc) + oldText.substring(endLoc+4);
+    //apply the changes to the label
     label.setText(newText);
     label.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
   }
