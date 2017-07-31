@@ -28,8 +28,8 @@
     <!-- Add your extensions here -->
     <toolWindow id="SpiraTeam Window" icon="/icons/spira-icon.png" anchor="right"
                 factoryClass="com.inflectra.idea.ui.SpiraToolWindowFactory"/>
-    <applicationService  serviceInterface="com.inflectra.idea.core.SpiraTeamCredentials.State"
-                         serviceImplementation="com.inflectra.idea.core.SpiraTeamCredentials.State"/>
+    <applicationService  serviceInterface="com.inflectra.idea.core.SpiraTeamCredentials"
+                         serviceImplementation="com.inflectra.idea.core.SpiraTeamCredentials"/>
   </extensions>
   <application-components>
     <component>

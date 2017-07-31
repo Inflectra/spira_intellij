@@ -31,20 +31,24 @@ import org.jetbrains.annotations.Nullable;
     id="credentials",
     file = "$APP_CONFIG$/credentialspersist.xml")
   )
-public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamCredentials.State> {
-  static class State {
+public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamCredentials> {
+  /**
+   * class used to actually store the credentials
+   * needed to have them persist through restarts
+   */
+  public static class State {
     /**
      * The username of the user
      */
-    private String username;
+    public String username;
     /**
      * The RSS token of the user
      */
-    private String token;
+    public String token;
     /**
      * The URL of the user,  ex https://demo.spiraservice.net/test
      */
-    private String url;
+    public String url;
 
     public State() {
 
@@ -58,7 +62,7 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
       return s.username.equals(username) && s.token.equals(token) && s.url.equals(url);
     }
   }
-  State state;
+  public State state;
 
   /**
    * No-arg constructor
@@ -70,12 +74,12 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
 
   @Nullable
   @Override
-  public SpiraTeamCredentials.State getState() {
-    return this.state;
+  public SpiraTeamCredentials getState() {
+    return this;
   }
 
   @Override
-  public void loadState(SpiraTeamCredentials.State credentials) {
+  public void loadState(SpiraTeamCredentials credentials) {
     XmlSerializerUtil.copyBean(credentials, this);
   }
 
