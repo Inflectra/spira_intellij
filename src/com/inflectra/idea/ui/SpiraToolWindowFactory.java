@@ -25,7 +25,6 @@ import com.inflectra.idea.core.model.Incident;
 import com.inflectra.idea.core.model.Requirement;
 import com.inflectra.idea.core.model.Task;
 import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.editor.impl.ColorProvider;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
