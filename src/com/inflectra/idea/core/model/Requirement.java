@@ -17,7 +17,7 @@ package com.inflectra.idea.core.model;
 
 /**
  * Represents a Requirement in Spira
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class Requirement extends Artifact {
 

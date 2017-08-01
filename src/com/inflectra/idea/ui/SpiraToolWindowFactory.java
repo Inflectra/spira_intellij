@@ -51,7 +51,7 @@ import java.util.Map;
 
 /**
  * Is the 'core' of the plug-in's UI, this is the class from which the SpiraToolWindow originates from
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class SpiraToolWindowFactory implements ToolWindowFactory {
   /**
@@ -62,6 +62,10 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    * Contains information about the currently selected artifact
    */
   private JBPanel bottomPanel;
+  /**
+   * The artifact label that has been selected in the top
+   */
+  private JBLabel selectedLabel;
   /**
    * The current instance of SpiraToolWindowFactory
    */
@@ -166,6 +170,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         //allow the user to click the label
         label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
         requirements.add(label);
+        //create empty space between the artifacts
+        requirements.add(Box.createRigidArea(new Dimension(0,3)));
       }
       //allow the user to click on the big requirement label to expand/collapse the artifact names
       requirementsLabel.addMouseListener(new TreeListener(requirements, requirementsLabel));
@@ -211,6 +217,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         //allow the user to click on the label
         label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
         tasks.add(label);
+        //create empty space between the artifacts
+        tasks.add(Box.createRigidArea(new Dimension(0,3)));
       }
       //enable expand/collapse features
       tasksLabel.addMouseListener(new TreeListener(tasks, tasksLabel));
@@ -270,6 +278,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
         //add the label to the incidents panel
         incidents.add(label);
+        //create empty space between the artifacts
+        incidents.add(Box.createRigidArea(new Dimension(0,3)));
       }
       //add a TreeListener (see below) to the label, passing in the panel
       //this listener shows the incidents panel when the incidents label is pressed
@@ -281,8 +291,20 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    * Show information in the bottom panel about the provided artifact
    * @param artifact The artifact to show information about
    * @param baseURL The base URL of the user
+   * @param label The label that was just selected
    */
-  public void showInformation(Artifact artifact, String baseURL) {
+  public void showInformation(Artifact artifact, String baseURL, JBLabel label) {
+    //only run if there was a previously selected artifact
+    if(selectedLabel != null) {
+      //change the color back to normal
+      Color color = UIUtil.getActiveTextColor();
+      selectedLabel.setForeground(color);
+    }
+    //set the currently selected label to be the new one and change the color
+    selectedLabel = label;
+    Color color = UIUtil.getListSelectionBackground();
+    selectedLabel.setForeground(color);
+
     //remove everything currently stored in the bottomPanel
     bottomPanel.removeAll();
     //show the name of the artifact as the title of the bottom panel
@@ -438,7 +460,7 @@ class TreeListener implements MouseListener {
       text = text.substring(0, startLoc) + expandButton + text.substring(startLoc + collapseButton.length());
       //apply the changes to the label
       label.setText(text);
-      //make the header color be inactive
+      //make the header appear inactive
       Color color = UIUtil.getHeaderInactiveColor();
       label.setForeground(color);
     }
@@ -454,7 +476,7 @@ class TreeListener implements MouseListener {
       //apply the changes to the label
       label.setText(text);
       //make the header color be active
-      Color color = UIUtil.getHeaderActiveColor();
+      Color color = UIUtil.getActiveTextColor();
       label.setForeground(color);
     }
   }
@@ -471,11 +493,8 @@ class TreeListener implements MouseListener {
 
   @Override
   public void mouseEntered(MouseEvent e) {
-    //only change color if it is not expanded
-    if(!isExpanded) {
-      Color color = UIUtil.getHeaderActiveColor();
-      label.setForeground(color);
-    }
+    Color color = UIUtil.getHeaderActiveColor();
+    label.setForeground(color);
   }
 
   @Override
@@ -483,6 +502,10 @@ class TreeListener implements MouseListener {
     //only change color if it is not expanded
     if(!isExpanded) {
       Color color = UIUtil.getHeaderInactiveColor();
+      label.setForeground(color);
+    }
+    else {
+      Color color = UIUtil.getActiveTextColor();
       label.setForeground(color);
     }
   }
@@ -510,7 +533,7 @@ class TopLabelMouseListener implements MouseListener {
   @Override
   public void mouseClicked(MouseEvent e) {
     //show additional information on the artifact in the bottom panel
-    window.showInformation(artifact, baseURL);
+    window.showInformation(artifact, baseURL, label);
   }
 
   @Override

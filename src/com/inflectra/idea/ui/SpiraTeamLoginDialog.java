@@ -25,7 +25,7 @@ import javax.swing.*;
 
 /**
  * Contains the GUI used for logging in
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class SpiraTeamLoginDialog extends DialogWrapper {
 

@@ -18,7 +18,7 @@ package com.inflectra.idea.core.model;
 /**
  * Class which contains information common to all Artifact types.
  * <p>It is inherited by the Incident, Requirement and Task classes</p>
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public abstract class Artifact {
   private int projectId;

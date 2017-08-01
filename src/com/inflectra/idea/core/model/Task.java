@@ -17,7 +17,7 @@ package com.inflectra.idea.core.model;
 
 /**
  * Represents a Task in Spira
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class Task extends Artifact {
 

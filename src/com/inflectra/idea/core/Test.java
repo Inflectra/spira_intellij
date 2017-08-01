@@ -31,7 +31,7 @@ import java.util.ArrayList;
 /**
  * Test class, not present in the UI whatsoever
  *
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class Test {
   static String expandButton = "▶";

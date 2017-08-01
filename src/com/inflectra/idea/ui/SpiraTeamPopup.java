@@ -25,7 +25,7 @@ import javax.swing.*;
 /**
  * A popup to be used by SpiraTeam
  * <p>Only allows one open popup at a time</p>
- * @author peter.geertsema
+ * @author Peter Geertsema
  * @deprecated Popups are no longer in use by SpiraTeam
  */
 public class SpiraTeamPopup {

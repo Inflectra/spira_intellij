@@ -17,7 +17,7 @@ package com.inflectra.idea.core.model;
 
 /**
  * Represents an Incident in Spira
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class Incident extends Artifact {
 

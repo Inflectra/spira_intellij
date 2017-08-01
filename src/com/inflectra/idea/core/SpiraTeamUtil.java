@@ -33,7 +33,7 @@ import java.util.ArrayList;
 /**
  * Class with a wide variety of utility methods used throughout the plug-in
  *
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class SpiraTeamUtil {
   /**

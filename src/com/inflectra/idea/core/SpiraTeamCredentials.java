@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Class which represents the username, RSS token and base URL to access SpiraTeam
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 @State(name = "SpiraTeamCredentials", storages =
   @Storage(
