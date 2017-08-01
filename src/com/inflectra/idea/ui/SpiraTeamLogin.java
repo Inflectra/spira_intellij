@@ -40,7 +40,7 @@ public class SpiraTeamLogin extends AnAction {
     //get the project associated with the event
     Project project = event.getData(PlatformDataKeys.PROJECT);
     //prompt the user to log in
-    SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, "SpiraTeam Login", credentials);
+    SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, credentials);
     //show the dialog
     dialog.show();
   }

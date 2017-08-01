@@ -33,6 +33,7 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.UIUtil;
+import com.jgoodies.looks.common.PopupMenuLayout;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -82,15 +83,14 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //make the panel lay out its children vertically, instead of horizontally
     bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
   }
-
   /**
    * Reloads the contents of the SpiraTeam Window
    */
   public static void reload(Project project) {
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     try {
-      //clear the top panel
-      instance.topPanel.removeAll();
+      instance.showTopInformation(project, credentials);
+      //show the username of the authenticated user
       instance.addRequirements(credentials);
       //add tasks to the top panel
       instance.addTasks(credentials);
@@ -98,29 +98,30 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       instance.addIncidents(credentials);
     }
     catch(IOException e) {
-      instance.showLogin(project);
-    }
-    finally {
-      instance.topPanel.updateUI();
+      instance.showInvalidInformation(project);
     }
   }
 
   /**
    * Shows the screen which informs the user that their credentials are invalid
    */
-  private void showLogin(Project project) {
+  private void showInvalidInformation(Project project) {
+    //clear both panels
+    topPanel.removeAll();
+    bottomPanel.removeAll();
+
     topPanel.add(new JBLabel("<html><h2>Not what you were looking for?</h2></html>"));
     topPanel.add(new JBLabel("Your authentication credentials may be wrong."));
     topPanel.add(new JBLabel("Please verify them by clicking the button below"));
     JButton button = new JButton("View Credentials");
     button.addActionListener(l -> {
-      SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, "SpiraTeam Login",
-                                                             ServiceManager.getService(SpiraTeamCredentials.class));
+      SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, ServiceManager.getService(SpiraTeamCredentials.class));
       dialog.show();
     });
     topPanel.add(button);
     //update the changes
     topPanel.updateUI();
+    bottomPanel.updateUI();
   }
 
   /**
@@ -361,6 +362,23 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     table.setText(text);
   }
 
+  private void showTopInformation(Project project, SpiraTeamCredentials credentials) {
+    JBPanel panel = new JBPanel();
+    BoxLayout layout = new BoxLayout(panel, BoxLayout.X_AXIS);
+    panel.setLayout(layout);
+    JBLabel signedIn = new JBLabel("You are signed in as: " + credentials.getUsername());
+    panel.add(signedIn);
+    JButton change = new JButton("Change");
+    //open the login dialog when the button is clicked
+    change.addActionListener(l -> {
+      SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, credentials);
+      dialog.show();
+    });
+    panel.add(change);
+
+    topPanel.add(panel);
+  }
+
   /**
    * Builds the SpiraTeam Window content when the application is launched
    */
@@ -370,6 +388,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     try {
       if(credentials != null) {
+        showTopInformation(project, credentials);
         //add requirements to the top panel
         addRequirements(credentials);
         //add tasks to the top panel
@@ -378,11 +397,11 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         addIncidents(credentials);
       }
       else
-        showLogin(project);
+        showInvalidInformation(project);
     }
     catch (Exception e) {
       //prompt the user to re-enter authentication information
-      showLogin(project);
+      showInvalidInformation(project);
     }
     //enable scrolling
     JBScrollPane topScroll = new JBScrollPane(topPanel);
@@ -399,6 +418,9 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //add the split-screen to the tool window
     window.getComponent().add(splitter);
   }
+
+
+
   //ignore the three methods below, they are not used
   @Override
   public void init(ToolWindow window) {

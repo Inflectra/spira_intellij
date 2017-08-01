@@ -36,13 +36,13 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
   private Project project;
 
 
-  public SpiraTeamLoginDialog(Project project, String title, SpiraTeamCredentials credentials) {
+  public SpiraTeamLoginDialog(Project project, SpiraTeamCredentials credentials) {
     super(project);
     this.credentials = credentials;
     this.project = project;
     //initialize the dialog
     init();
-    setTitle(title);
+    setTitle("SpiraTeam Login");
   }
 
   @Nullable

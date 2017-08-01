@@ -3,7 +3,6 @@
   <name>SpiraTeam Plugin</name>
   <version>1.0</version>
   <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
-  <!--  <vendor email="" url="https://www.jetbrains.com/support">JetBrains</vendor> -->
 
   <description><![CDATA[
       Plugin for SpiraTeam
@@ -14,11 +13,8 @@
     ]]>
   </change-notes>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
   <idea-version since-build="145.0"/>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
-       on how to target different products -->
   <depends>com.intellij.modules.lang</depends>
 
   <extensions defaultExtensionNs="com.intellij">
