@@ -2,7 +2,7 @@
   <id>com.inflectra.SpiraTeam</id>
   <name>SpiraTeam Plugin</name>
   <version>1.0</version>
-  <vendor email="support@inflectra.com" url="http://www.inflectra.com">YourCompany</vendor>
+  <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
   <!--  <vendor email="" url="https://www.jetbrains.com/support">JetBrains</vendor> -->
 
   <description><![CDATA[
@@ -10,8 +10,7 @@
     ]]></description>
 
   <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+      Plugin now persists credentials through restarts
     ]]>
   </change-notes>
 
@@ -26,10 +25,10 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <toolWindow id="SpiraTeam Window" icon="/icons/spira-icon.png" anchor="left"
+    <toolWindow id="SpiraTeam Window" icon="/icons/spira-icon.png" anchor="right"
                 factoryClass="com.inflectra.idea.ui.SpiraToolWindowFactory"/>
-    <applicationService serviceImplementation="com.inflectra.idea.core.SpiraTeamCredentials"
-                        serviceInterface="com.inflectra.idea.core.SpiraTeamCredentials"/>
+    <applicationService  serviceInterface="com.inflectra.idea.core.SpiraTeamCredentials"
+                         serviceImplementation="com.inflectra.idea.core.SpiraTeamCredentials"/>
   </extensions>
   <application-components>
     <component>

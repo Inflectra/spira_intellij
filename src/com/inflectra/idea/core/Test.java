@@ -31,13 +31,16 @@ import java.util.ArrayList;
 /**
  * Test class, not present in the UI whatsoever
  *
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class Test {
+  static String expandButton = "▶";
+  static String collapseButton = "▼";
+
   SpiraTeamCredentials credentials;
 
   public Test() {
-    credentials = SpiraTeamCredentials.loadCredentials();
+    //credentials = SpiraTeamCredentials.loadCredentials();
   }
 
   public static void main(String[] args) {
@@ -46,11 +49,40 @@ public class Test {
       //test.json();
       //test.credentials();
       //test.rest();
-      test.scroll();
+      //test.scroll();
+      //test.underline();
+      test.expand();
     }
     catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void expand() {
+    String text = "<html><h2>Text</h2></html>";
+    int startLoc = text.indexOf("<h2>") + 4;
+    text = text.substring(0, startLoc) + expandButton + text.substring(startLoc);
+    System.out.println(text);
+
+    startLoc = text.indexOf(expandButton);
+    text = text.substring(0, startLoc) + collapseButton + text.substring(startLoc + 1);
+    System.out.println(text);
+
+    startLoc = text.indexOf(collapseButton);
+    text = text.substring(0, startLoc) + expandButton + text.substring(startLoc + 1);
+    System.out.println(text);
+  }
+
+  private void underline() {
+    String s = "<HTML><h2>Test</h2></HTML>";
+    int startLoc = s.indexOf("<h2>");
+    int endLoc = s.indexOf("</h2>");
+    s = s.substring(0, startLoc + 4) + "<u>" + s.substring(startLoc+4, endLoc) + "</u>" + s.substring(endLoc);
+
+    startLoc = s.indexOf("<u>");
+    endLoc = s.indexOf("</u>");
+    s = s.substring(0, startLoc) + s.substring(startLoc+3, endLoc) + s.substring(endLoc+4);
+    System.out.println(s);
   }
 
   private void scroll() {

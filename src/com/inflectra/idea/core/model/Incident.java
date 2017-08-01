@@ -15,9 +15,13 @@
  */
 package com.inflectra.idea.core.model;
 
+/**
+ * Represents an Incident in Spira
+ * @author Peter Geertsema
+ */
 public class Incident extends Artifact {
 
-  public Incident(int projectId, String projectName, int artifactId, String name) {
-    super(projectId, projectName, artifactId, ArtifactType.INCIDENT, name);
+  public Incident(int projectId, String projectName, int artifactId, String name, String priorityName) {
+    super(projectId, projectName, artifactId, ArtifactType.INCIDENT, name, priorityName);
   }
 }

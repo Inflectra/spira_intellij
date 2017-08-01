@@ -33,7 +33,7 @@ import java.util.ArrayList;
 /**
  * Class with a wide variety of utility methods used throughout the plug-in
  *
- * @author peter.geertsema
+ * @author Peter Geertsema
  */
 public class SpiraTeamUtil {
   /**
@@ -59,8 +59,10 @@ public class SpiraTeamUtil {
    * @param in The URI
    */
   public static void openURL(URI in) {
+    //only attempt to open URI if it is supported
     if (Desktop.isDesktopSupported()) {
       try {
+        //open the URI in browser
         Desktop.getDesktop().browse(in);
       }
       catch (IOException e) {
@@ -79,34 +81,51 @@ public class SpiraTeamUtil {
    */
   public static URI getArtifactURI(Artifact artifact, String baseURL) {
     try {
+      //procedurally generates the URI for the artifact in question
       return new URI(baseURL + "/" + artifact.getProjectId() + "/" + artifact.getArtifactType().getArtifactName() +
                      "/" + artifact.getArtifactId() + ".aspx");
     }
     catch (Exception e) {
+      //should never happen
       e.printStackTrace();
     }
     return null;
   }
 
   /**
-   * @param credentials The information URL and login information needed to perform the HTTP request
+   * @param credentials The information needed to perform the HTTP request
    * @return An InputStream containing JSON with all requirements assigned to the user
    * @throws IOException If the URL is invalid
    */
   public static InputStream getAssignedRequirements(SpiraTeamCredentials credentials) throws IOException {
-    //TODO: Add support for previous versions of SpiraTeam
+    //create the URL
     String url = credentials.getUrl() + "/services/v5_0/RestService.svc/requirements?username=" + credentials.getUsername() +
                  "&api-key=" + credentials.getToken();
+    //perform the GET request
     return httpGet(url);
   }
 
+  /**
+   * @param credentials The information needed to perform the HTTP request
+   * @return An InputStream containing JSON with all the tasks assigned to the user
+   * @throws IOException If the URL is invalid
+   */
   public static InputStream getAssignedTasks(SpiraTeamCredentials credentials) throws IOException {
+    //create the URL
     String url = credentials.getUrl() + "/services/v5_0/RestService.svc/tasks?username=" + credentials.getUsername() +
                  "&api-key=" + credentials.getToken();
+    //perform the GET request
     return httpGet(url);
   }
 
+  /**
+   * @param credentials The information needed to perform the HTTP request
+   * @return A list of all the Incidents, each Map represents an incident
+   * @throws IOException If the URL is invalid
+   */
   public static ArrayList<LinkedTreeMap> getAssignedIncidents(SpiraTeamCredentials credentials) throws IOException {
+    //TODO: Update to use the /incidents REST request when Version 5.3 is released
+    //the body of the request
     String body = "[{\"PropertyName\": \"OwnerId\", \"IntValue\": 1}, {\"PropertyName\": \"IncidentStatusId\", \"IntValue\": -2}]";
     //the list to be returned
     ArrayList<LinkedTreeMap> out = new ArrayList<>();
@@ -114,6 +133,7 @@ public class SpiraTeamUtil {
     ArrayList<Integer> projectIds = getAvailableProjects(credentials);
     //loop through all of the available projects
     for (int projectId : projectIds) {
+      //build the URL for each project
       String url = credentials.getUrl() +
                    "/services/v5_0/RestService.svc/projects/" + projectId + "/incidents/search" +
                    "?start_row=1&number_rows=1000&sort_by=Priority&username=" + credentials.getUsername() +
@@ -137,6 +157,7 @@ public class SpiraTeamUtil {
    * @throws IOException If the URL is invalid
    */
   private static ArrayList<Integer> getAvailableProjects(SpiraTeamCredentials credentials) throws IOException {
+    //create the URL
     String url = credentials.getUrl() + "/services/v5_0/RestService.svc/projects?username="
                  + credentials.getUsername() + "&api-key=" + credentials.getToken();
     //perform an HTTP GET request on the specified URL
@@ -146,9 +167,13 @@ public class SpiraTeamUtil {
     JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(stream)));
     //turn JSON into an ArrayList
     ArrayList<LinkedTreeMap> jsonList = gson.fromJson(reader, ArrayList.class);
-    ArrayList<Integer> out = new ArrayList<Integer>();
+    //the list to be returned
+    ArrayList<Integer> out = new ArrayList<>();
+    //loop through each map in the list
     for (LinkedTreeMap map : jsonList) {
+      //retrieve the project ID
       Double toAdd = (Double)map.get("ProjectId");
+      //add the ID to the output list
       out.add(toAdd.intValue());
     }
     return out;
@@ -164,7 +189,6 @@ public class SpiraTeamUtil {
   public static InputStream httpGet(String input) throws IOException {
     URL url = new URL(input);
     URLConnection connection = url.openConnection();
-    connection.setDoOutput(true);
     //have the connection retrieve JSON
     connection.setRequestProperty("accept", "application/json; charset=utf-8");
     connection.connect();
@@ -182,19 +206,21 @@ public class SpiraTeamUtil {
   public static InputStream httpPost(String input, String body) throws IOException {
     URL url = new URL(input);
     HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+    //allow sending a request body
     connection.setDoOutput(true);
     connection.setRequestMethod("POST");
-    //add headers
+    //have the connection send and retrieve JSON
     connection.setRequestProperty("accept", "application/json; charset=utf-8");
     connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-
     connection.connect();
+    //used to send data in the REST request
     DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
-
-
+    //write the body to the stream
     outputStream.writeBytes(body);
+    //send the OutputStream to the server
     outputStream.flush();
     outputStream.close();
+    //return the input stream
     return connection.getInputStream();
   }
 }
