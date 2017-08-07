@@ -89,6 +89,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   public static void reload(Project project) {
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     try {
+      instance.topPanel.removeAll();
       instance.showTopInformation(project, credentials);
       //show the username of the authenticated user
       instance.addRequirements(credentials);

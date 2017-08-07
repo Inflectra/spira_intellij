@@ -9,7 +9,7 @@
     ]]></description>
 
   <change-notes><![CDATA[
-      Plugin now persists credentials through restarts
+      No more conflicting component names
     ]]>
   </change-notes>
 
@@ -19,10 +19,8 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <toolWindow id="SpiraTeam Window" icon="/icons/spira-icon.png" anchor="right"
+    <toolWindow id="SpiraTeam" icon="/icons/spira-icon.png" anchor="right"
                 factoryClass="com.inflectra.idea.ui.SpiraToolWindowFactory"/>
-    <applicationService  serviceInterface="com.inflectra.idea.core.SpiraTeamCredentials"
-                         serviceImplementation="com.inflectra.idea.core.SpiraTeamCredentials"/>
   </extensions>
   <application-components>
     <component>
@@ -33,7 +31,6 @@
 
   <actions>
     <!-- Add your actions here -->
-
     <action id="SpiraTeamLogin" class="com.inflectra.idea.ui.SpiraTeamLogin" text="SpiraTeam Login"
             description="Prompt to login to SpiraTeam">
       <add-to-group group-id="HelpMenu" anchor="first"/>
