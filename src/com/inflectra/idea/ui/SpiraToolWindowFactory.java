@@ -457,7 +457,7 @@ class TreeListener implements MouseListener {
     String text = label.getText();
     int startLoc = text.indexOf("<h2>") + 4;
     //add in the expand button, which is smaller than the rest of the text
-    text = text.substring(0, startLoc) + "<span style=\"font-size: .6em\">" + expandButton + "</span>" + text.substring(startLoc);
+    text = text.substring(0, startLoc) + "<span style=\"font-size: .6em; font-family: Arial\">" + expandButton + "</span>" + text.substring(startLoc);
     label.setText(text);
     //make the header color inactive by default
     Color color = UIUtil.getHeaderInactiveColor();
