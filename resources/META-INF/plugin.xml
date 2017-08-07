@@ -1,15 +1,19 @@
 <idea-plugin>
   <id>com.inflectra.SpiraTeam</id>
   <name>SpiraTeam Plugin</name>
-  <version>1.0</version>
+  <version>1.1</version>
   <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
 
   <description><![CDATA[
-      Plugin for SpiraTeam
+      Plugin for SpiraTeam by Inflectra Corporation
     ]]></description>
 
   <change-notes><![CDATA[
-      No more conflicting component names
+      <ul>
+        <li>Added more information to the top panel</li>
+        <li>No more conflicting component names</li>
+      </ul>
+
     ]]>
   </change-notes>
 
@@ -30,11 +34,17 @@
   </application-components>
 
   <actions>
+    <group id="SpiraTeam.ActiveToolbar">
+      <reference id="SpiraTeamLogin"/>
+      <add-to-group group-id="MainToolBar" anchor="last"/>
+    </group>
+
     <!-- Add your actions here -->
     <action id="SpiraTeamLogin" class="com.inflectra.idea.ui.SpiraTeamLogin" text="SpiraTeam Login"
             description="Prompt to login to SpiraTeam">
-      <add-to-group group-id="HelpMenu" anchor="first"/>
+      <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="first"/>
     </action>
   </actions>
+
 
 </idea-plugin>

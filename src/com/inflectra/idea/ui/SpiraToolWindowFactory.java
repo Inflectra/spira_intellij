@@ -33,7 +33,6 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.UIUtil;
-import com.jgoodies.looks.common.PopupMenuLayout;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -123,6 +122,170 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //update the changes
     topPanel.updateUI();
     bottomPanel.updateUI();
+  }
+
+  /**
+   * Show information in the bottom panel about the provided artifact
+   * @param artifact The artifact to show information about
+   * @param baseURL The base URL of the user
+   * @param label The label that was just selected
+   */
+  public void showInformation(Artifact artifact, String baseURL, JBLabel label) {
+    //only run if there was a previously selected artifact
+    if(selectedLabel != null) {
+      //change the color back to normal
+      Color color = UIUtil.getActiveTextColor();
+      selectedLabel.setForeground(color);
+    }
+    //set the currently selected label to be the new one and change the color
+    selectedLabel = label;
+    Color color = UIUtil.getListSelectionBackground();
+    selectedLabel.setForeground(color);
+
+    //remove everything currently stored in the bottomPanel
+    bottomPanel.removeAll();
+    //show the name of the artifact as the title of the bottom panel
+    JBLabel title = new JBLabel("<html><div><h2>" + artifact.getPrefix() + ":" + artifact.getArtifactId()
+                                + " - " + artifact.getName() + "</h2></div></html>");
+    //allow user to click title to take to SpiraTeam
+    title.addMouseListener(new HyperlinkListener(SpiraTeamUtil.getArtifactURI(artifact, baseURL), title));
+    bottomPanel.add(title);
+    //label which will contain a table of all the values. Has no border
+    JBLabel table = new JBLabel("<html><style>th {padding-right: 20px; text-align: left;}</style><table border=\"0\">");
+
+    String type = artifact.getType();
+    //only show type if it is not null
+    if(type != null) {
+      addContentToTable(table, "Type", type);
+    }
+    String project = artifact.getProjectName();
+    if(project != null) {
+      addContentToTable(table, "Project", project);
+    }
+    String status = artifact.getStatus();
+    if(status != null) {
+      addContentToTable(table, "Status", status);
+    }
+    String priority = artifact.getPriorityName();
+    if(priority != null) {
+      addContentToTable(table, "Priority", priority);
+    }
+    //end the table
+    table.setText(table.getText() + "</table></html>");
+    bottomPanel.add(table);
+    //show description separately
+    String description = artifact.getDescription();
+    if(description != null) {
+      JBLabel descriptionLabel = new JBLabel("<html><strong>Description:</strong><br><div style=\"word-wrap: normal\">" + description + "</div></html>");
+      bottomPanel.add(descriptionLabel);
+    }
+
+    //need to show the changes
+    bottomPanel.updateUI();
+  }
+
+  /**
+   * Utility method used to add the given header and data to the table contained in the label
+   * @param table The table to add the content to
+   * @param header The name of the property to be shown
+   * @param data The data associated with the header
+   */
+  private static void addContentToTable(JBLabel table, String header, String data) {
+    String text = table.getText();
+    text+="<tr>";
+    text+="<th>" + header + "</th>";
+    text+="<td>" + data + "</td>";
+    text+="</tr>";
+    table.setText(text);
+  }
+
+  /**
+   * Adds information to the top such as the currently signed in user as well as a refresh button
+   * @param project
+   * @param credentials
+   */
+  private void showTopInformation(Project project, SpiraTeamCredentials credentials) {
+    //panel which will contain information and various buttons
+    JBPanel panel = new JBPanel();
+    panel.setAlignmentX(0);
+    //have the panel lay out its children horizontally
+    LayoutManager layout = new BoxLayout(panel, BoxLayout.X_AXIS);
+    panel.setLayout(layout);
+    panel.setBorder(new EmptyBorder(0,0,0,0));
+
+    JButton refresh = new JButton("Refresh");
+
+    refresh.addActionListener(l -> {
+      topPanel.removeAll();
+      bottomPanel.removeAll();
+      try {
+        //show the username of the authenticated user
+        showTopInformation(project, credentials);
+        addRequirements(credentials);
+        //add tasks to the top panel
+        addTasks(credentials);
+        //add incidents to the top panel
+        addIncidents(credentials);
+      }
+      catch(IOException e) {
+        showInvalidInformation(project);
+      }
+    });
+    panel.add(refresh);
+
+    //show who is signed in
+    JBLabel signedIn = new JBLabel("You are signed in as: " + credentials.getUsername());
+    panel.add(signedIn);
+    JButton change = new JButton("Change");
+    //open the login dialog when the button is clicked
+    change.addActionListener(l -> {
+      SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, credentials);
+      dialog.show();
+    });
+    //add the button to the panel
+    panel.add(change);
+    //add the now populated panel to the top
+    topPanel.add(panel);
+  }
+
+  /**
+   * Builds the SpiraTeam Window content when the application is launched
+   */
+  @Override
+  public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow window) {
+    //get the credentials from the IDE
+    SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
+    try {
+      if(credentials != null) {
+        showTopInformation(project, credentials);
+        //add requirements to the top panel
+        addRequirements(credentials);
+        //add tasks to the top panel
+        addTasks(credentials);
+        //add incidents to the top panel
+        addIncidents(credentials);
+      }
+      else
+        showInvalidInformation(project);
+    }
+    catch (Exception e) {
+      //prompt the user to re-enter authentication information
+      showInvalidInformation(project);
+    }
+    //enable scrolling
+    JBScrollPane topScroll = new JBScrollPane(topPanel);
+    //enables the split screen
+    JBSplitter splitter = new JBSplitter();
+    //make the splitter divide horizontally
+    splitter.setOrientation(true);
+    //having the top panel be...on top
+    splitter.setFirstComponent(topScroll);
+    //enable scrolling
+    JBScrollPane bottomScroll = new JBScrollPane(bottomPanel);
+    //have the bottom panel be on the bottom
+    splitter.setSecondComponent(bottomScroll);
+    //add the split-screen to the tool window
+    window.getComponent().add(splitter);
   }
 
   /**
@@ -286,156 +449,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       //this listener shows the incidents panel when the incidents label is pressed
       incidentsLabel.addMouseListener(new TreeListener(incidents, incidentsLabel));
     }
-  }
-
-  /**
-   * Show information in the bottom panel about the provided artifact
-   * @param artifact The artifact to show information about
-   * @param baseURL The base URL of the user
-   * @param label The label that was just selected
-   */
-  public void showInformation(Artifact artifact, String baseURL, JBLabel label) {
-    //only run if there was a previously selected artifact
-    if(selectedLabel != null) {
-      //change the color back to normal
-      Color color = UIUtil.getActiveTextColor();
-      selectedLabel.setForeground(color);
-    }
-    //set the currently selected label to be the new one and change the color
-    selectedLabel = label;
-    Color color = UIUtil.getListSelectionBackground();
-    selectedLabel.setForeground(color);
-
-    //remove everything currently stored in the bottomPanel
-    bottomPanel.removeAll();
-    //show the name of the artifact as the title of the bottom panel
-    JBLabel title = new JBLabel("<html><div><h2>" + artifact.getPrefix() + ":" + artifact.getArtifactId()
-                                + " - " + artifact.getName() + "</h2></div></html>");
-    //allow user to click title to take to SpiraTeam
-    title.addMouseListener(new HyperlinkListener(SpiraTeamUtil.getArtifactURI(artifact, baseURL), title));
-    bottomPanel.add(title);
-    //label which will contain a table of all the values. Has no border
-    JBLabel table = new JBLabel("<html><style>th {padding-right: 20px; text-align: left;}</style><table border=\"0\">");
-
-    String type = artifact.getType();
-    //only show type if it is not null
-    if(type != null) {
-      addContentToTable(table, "Type", type);
-    }
-    String project = artifact.getProjectName();
-    if(project != null) {
-      addContentToTable(table, "Project", project);
-    }
-    String status = artifact.getStatus();
-    if(status != null) {
-      addContentToTable(table, "Status", status);
-    }
-    String priority = artifact.getPriorityName();
-    if(priority != null) {
-      addContentToTable(table, "Priority", priority);
-    }
-    //end the table
-    table.setText(table.getText() + "</table></html>");
-    bottomPanel.add(table);
-    //show description separately
-    String description = artifact.getDescription();
-    if(description != null) {
-      JBLabel descriptionLabel = new JBLabel("<html><strong>Description:</strong><br><div style=\"word-wrap: normal\">" + description + "</div></html>");
-      bottomPanel.add(descriptionLabel);
-    }
-
-    //need to show the changes
-    bottomPanel.updateUI();
-  }
-
-  /**
-   * Utility method used to add the given header and data to the table contained in the label
-   * @param table The table to add the content to
-   * @param header The name of the property to be shown
-   * @param data The data associated with the header
-   */
-  private static void addContentToTable(JBLabel table, String header, String data) {
-    String text = table.getText();
-    text+="<tr>";
-    text+="<th>" + header + "</th>";
-    text+="<td>" + data + "</td>";
-    text+="</tr>";
-    table.setText(text);
-  }
-
-  private void showTopInformation(Project project, SpiraTeamCredentials credentials) {
-    JBPanel panel = new JBPanel();
-    BoxLayout layout = new BoxLayout(panel, BoxLayout.X_AXIS);
-    panel.setLayout(layout);
-    JBLabel signedIn = new JBLabel("You are signed in as: " + credentials.getUsername());
-    panel.add(signedIn);
-    JButton change = new JButton("Change");
-    //open the login dialog when the button is clicked
-    change.addActionListener(l -> {
-      SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, credentials);
-      dialog.show();
-    });
-    panel.add(change);
-
-    topPanel.add(panel);
-  }
-
-  /**
-   * Builds the SpiraTeam Window content when the application is launched
-   */
-  @Override
-  public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow window) {
-    //get the credentials from the IDE
-    SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
-    try {
-      if(credentials != null) {
-        showTopInformation(project, credentials);
-        //add requirements to the top panel
-        addRequirements(credentials);
-        //add tasks to the top panel
-        addTasks(credentials);
-        //add incidents to the top panel
-        addIncidents(credentials);
-      }
-      else
-        showInvalidInformation(project);
-    }
-    catch (Exception e) {
-      //prompt the user to re-enter authentication information
-      showInvalidInformation(project);
-    }
-    //enable scrolling
-    JBScrollPane topScroll = new JBScrollPane(topPanel);
-    //enables the split screen
-    JBSplitter splitter = new JBSplitter();
-    //make the splitter divide horizontally
-    splitter.setOrientation(true);
-    //having the top panel be...on top
-    splitter.setFirstComponent(topScroll);
-    //enable scrolling
-    JBScrollPane bottomScroll = new JBScrollPane(bottomPanel);
-    //have the bottom panel be on the bottom
-    splitter.setSecondComponent(bottomScroll);
-    //add the split-screen to the tool window
-    window.getComponent().add(splitter);
-  }
-
-
-
-  //ignore the three methods below, they are not used
-  @Override
-  public void init(ToolWindow window) {
-    //not used
-  }
-  @Override
-  public boolean shouldBeAvailable(@NotNull Project project) {
-    //not used
-    return false;
-  }
-  @Override
-  public boolean isDoNotActivateOnStart() {
-    //not used
-    return false;
   }
 }
 

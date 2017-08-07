@@ -19,6 +19,9 @@ import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
+import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBPanel;
+import com.intellij.ui.components.JBTextField;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -29,9 +32,9 @@ import javax.swing.*;
  */
 public class SpiraTeamLoginDialog extends DialogWrapper {
 
-  private JTextField url;
-  private JTextField username;
-  private JTextField rssToken;
+  private JBTextField url;
+  private JBTextField username;
+  private JBTextField rssToken;
   private SpiraTeamCredentials credentials;
   private Project project;
 
@@ -49,30 +52,30 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
   @Override
   protected JComponent createCenterPanel() {
     //contains all of the labels and text fields
-    JPanel out = new JPanel();
+    JBPanel out = new JBPanel();
     //ensuring the components are layed out vertically
     out.setLayout(new BoxLayout(out, BoxLayout.Y_AXIS));
     //URL text field
-    url = new JTextField(30);
+    url = new JBTextField();
     //show the URL stored in credentials if it exists
     if (credentials.getUrl() != null) {
       url.setText(credentials.getUrl());
     }
-    out.add(new JLabel("SpiraTeam URL:"));
+    out.add(new JBLabel("SpiraTeam URL:"));
     out.add(url);
-    username = new JTextField(30);
+    username = new JBTextField();
     //show the username stored in credentials if it exists
     if (credentials.getUsername() != null) {
       username.setText(credentials.getUsername());
     }
-    out.add(new JLabel("Username:"));
+    out.add(new JBLabel("Username:"));
     out.add(username);
-    rssToken = new JTextField(30);
+    rssToken = new JBTextField();
     //show the RSS Token stored in credentials if it exists
     if (credentials.getToken() != null) {
       rssToken.setText(credentials.getToken());
     }
-    out.add(new JLabel("RSS Token:"));
+    out.add(new JBLabel("RSS Token:"));
     out.add(rssToken);
 
     return out;
