@@ -10,8 +10,9 @@
 
   <change-notes><![CDATA[
       <ul>
-        <li>Added more information to the top panel</li>
-        <li>No more conflicting component names</li>
+        <li>Plug-in will remember the last opened artifact through refreshes and restarts</li>
+        <li>Added a SpiraTeam section in the "Tools" menu</li>
+        <li>Fixed conflicting component names bug</li>
       </ul>
 
     ]]>
@@ -34,15 +35,20 @@
   </application-components>
 
   <actions>
-    <group id="SpiraTeam.ActiveToolbar">
+    <group id="SpiraTeam.ActiveToolbar" text="SpiraTeam" popup="true">
       <reference id="SpiraTeamLogin"/>
-      <add-to-group group-id="MainToolBar" anchor="last"/>
+      <reference id="SpiraTeamRefresh"/>
+      <add-to-group group-id="ToolsMenu" anchor="first"/>
     </group>
 
     <!-- Add your actions here -->
     <action id="SpiraTeamLogin" class="com.inflectra.idea.ui.SpiraTeamLogin" text="SpiraTeam Login"
             description="Prompt to login to SpiraTeam">
       <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="first"/>
+    </action>
+    <action id="SpiraTeamRefresh" class="com.inflectra.idea.ui.SpiraTeamRefresh" text="SpiraTeam Refresh"
+            description="Refresh the artifacts from SpiraTeam SpiraTeam">
+      <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
     </action>
   </actions>
 

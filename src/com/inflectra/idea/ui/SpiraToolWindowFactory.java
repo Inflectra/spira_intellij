@@ -20,10 +20,7 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.stream.JsonReader;
 import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
-import com.inflectra.idea.core.model.Artifact;
-import com.inflectra.idea.core.model.Incident;
-import com.inflectra.idea.core.model.Requirement;
-import com.inflectra.idea.core.model.Task;
+import com.inflectra.idea.core.model.*;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -32,6 +29,7 @@ import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.content.ContentManager;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -130,13 +128,17 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    * @param baseURL The base URL of the user
    * @param label The label that was just selected
    */
-  public void showInformation(Artifact artifact, String baseURL, JBLabel label) {
+  public void showInformation(Artifact artifact, SpiraTeamCredentials credentials, JBLabel label) {
     //only run if there was a previously selected artifact
     if(selectedLabel != null) {
       //change the color back to normal
       Color color = UIUtil.getActiveTextColor();
       selectedLabel.setForeground(color);
     }
+    //have the plug-in remember the last opened artifact
+    credentials.setLastOpenArtifactId(artifact.getArtifactId());
+    credentials.setLastOpenArtifactType(artifact.getArtifactType());
+
     //set the currently selected label to be the new one and change the color
     selectedLabel = label;
     Color color = UIUtil.getListSelectionBackground();
@@ -148,7 +150,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     JBLabel title = new JBLabel("<html><div><h2>" + artifact.getPrefix() + ":" + artifact.getArtifactId()
                                 + " - " + artifact.getName() + "</h2></div></html>");
     //allow user to click title to take to SpiraTeam
-    title.addMouseListener(new HyperlinkListener(SpiraTeamUtil.getArtifactURI(artifact, baseURL), title));
+    title.addMouseListener(new HyperlinkListener(SpiraTeamUtil.getArtifactURI(artifact, credentials.getUrl()), title));
     bottomPanel.add(title);
     //label which will contain a table of all the values. Has no border
     JBLabel table = new JBLabel("<html><style>th {padding-right: 20px; text-align: left;}</style><table border=\"0\">");
@@ -332,10 +334,15 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         artifact.setStatus(status);
         JBLabel label = new JBLabel(name);
         //allow the user to click the label
-        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
+        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
         requirements.add(label);
         //create empty space between the artifacts
         requirements.add(Box.createRigidArea(new Dimension(0,3)));
+        //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
+        //this allows artifacts to stay open through restarts and refreshes
+        if(credentials.getLastOpenArtifactType() == ArtifactType.REQUIREMENT && credentials.getLastOpenArtifactId() == artifactId) {
+          showInformation(artifact, credentials, label);
+        }
       }
       //allow the user to click on the big requirement label to expand/collapse the artifact names
       requirementsLabel.addMouseListener(new TreeListener(requirements, requirementsLabel));
@@ -379,10 +386,15 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         artifact.setType(type);
         JBLabel label = new JBLabel(name);
         //allow the user to click on the label
-        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
+        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
         tasks.add(label);
         //create empty space between the artifacts
         tasks.add(Box.createRigidArea(new Dimension(0,3)));
+        //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
+        //this allows artifacts to stay open through restarts and refreshes
+        if(credentials.getLastOpenArtifactType() == ArtifactType.TASK && credentials.getLastOpenArtifactId() == artifactId) {
+          showInformation(artifact, credentials, label);
+        }
       }
       //enable expand/collapse features
       tasksLabel.addMouseListener(new TreeListener(tasks, tasksLabel));
@@ -439,11 +451,16 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         //create a label which says the name of the artifact
         JBLabel label = new JBLabel(name);
         //add a listener, see the LabelMouseListener class below
-        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials.getUrl()));
+        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
         //add the label to the incidents panel
         incidents.add(label);
         //create empty space between the artifacts
         incidents.add(Box.createRigidArea(new Dimension(0,3)));
+        //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
+        //this allows artifacts to stay open through restarts and refreshes
+        if(credentials.getLastOpenArtifactType() == ArtifactType.INCIDENT && credentials.getLastOpenArtifactId() == artifactId) {
+          showInformation(artifact, credentials, label);
+        }
       }
       //add a TreeListener (see below) to the label, passing in the panel
       //this listener shows the incidents panel when the incidents label is pressed
@@ -556,19 +573,19 @@ class TopLabelMouseListener implements MouseListener {
    * Used only to show information in the bottom panel when a label is clicked
    */
   private SpiraToolWindowFactory window;
-  private String baseURL;
+  private SpiraTeamCredentials credentials;
 
-  public TopLabelMouseListener(Artifact artifact, JBLabel label, SpiraToolWindowFactory window, String baseURL) {
+  public TopLabelMouseListener(Artifact artifact, JBLabel label, SpiraToolWindowFactory window, SpiraTeamCredentials credentials) {
     this.artifact = artifact;
     this.label = label;
     this.window = window;
-    this.baseURL = baseURL;
+    this.credentials = credentials;
   }
 
   @Override
   public void mouseClicked(MouseEvent e) {
     //show additional information on the artifact in the bottom panel
-    window.showInformation(artifact, baseURL, label);
+    window.showInformation(artifact, credentials, label);
   }
 
   @Override

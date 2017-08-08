@@ -15,6 +15,7 @@
  */
 package com.inflectra.idea.core;
 
+import com.inflectra.idea.core.model.ArtifactType;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
@@ -48,6 +49,14 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
      * The URL of the user,  ex https://demo.spiraservice.net/test
      */
     public String url;
+    /**
+     * The type of artifact that was last opened. Used to have an artifact open on startup or refresh
+     */
+    public ArtifactType lastOpenArtifactType;
+    /**
+     * The ID of the artifact that was last opened. Used to have an artifact open on startup or refresh
+     */
+    public int lastOpenArtifactId;
 
     public State() {
 
@@ -65,7 +74,7 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
   /**
    * Stores an instance of a State object, which is a wrapper class for the authentication information
    */
-  public State state;
+  private State state;
 
   /**
    * No-arg constructor
@@ -111,6 +120,22 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
 
   public void setUrl(String url) {
     this.state.url = url;
+  }
+
+  public ArtifactType getLastOpenArtifactType() {
+    return this.state.lastOpenArtifactType;
+  }
+
+  public void setLastOpenArtifactType(ArtifactType artifactType) {
+    this.state.lastOpenArtifactType = artifactType;
+  }
+
+  public int getLastOpenArtifactId() {
+    return this.state.lastOpenArtifactId;
+  }
+
+  public void setLastOpenArtifactId(int artifactId) {
+    this.state.lastOpenArtifactId = artifactId;
   }
 
   @Override
