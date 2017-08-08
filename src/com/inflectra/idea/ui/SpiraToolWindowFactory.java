@@ -252,6 +252,13 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //add the button to the panel
     panel.add(home);
 
+    JButton newArtifact = new JButton("New");
+    newArtifact.addActionListener(l -> {
+      SpiraTeamNewArtifact artifact = new SpiraTeamNewArtifact(project, credentials);
+      artifact.show();
+    });
+    panel.add(newArtifact);
+
     //add the now populated panel to the top
     topPanel.add(panel);
   }

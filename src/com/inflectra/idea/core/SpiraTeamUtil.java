@@ -20,6 +20,7 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.stream.JsonReader;
 import com.inflectra.idea.core.model.Artifact;
 import com.inflectra.idea.core.model.ArtifactType;
+import com.inflectra.idea.core.model.SpiraTeamProject;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;
@@ -77,9 +78,9 @@ public class SpiraTeamUtil {
   public static URI getMyPageURL(SpiraTeamCredentials credentials) {
     try {
       //need to have a project ID in the URL for it to work
-      ArrayList<Integer> availableProjects = getAvailableProjects(credentials);
+      ArrayList<SpiraTeamProject> availableProjects = getAvailableProjects(credentials);
       if (availableProjects.size() > 0) {
-        return new URI(credentials.getUrl() + "/" + availableProjects.get(0) + "/MyPage.aspx");
+        return new URI(credentials.getUrl() + "/" + availableProjects.get(0).getProjectId() + "/MyPage.aspx");
       }
     }
     catch(Exception e) {
@@ -145,12 +146,12 @@ public class SpiraTeamUtil {
     //the list to be returned
     ArrayList<LinkedTreeMap> out = new ArrayList<>();
     //get all of the projects available to the user
-    ArrayList<Integer> projectIds = getAvailableProjects(credentials);
+    ArrayList<SpiraTeamProject> projects = getAvailableProjects(credentials);
     //loop through all of the available projects
-    for (int projectId : projectIds) {
+    for (SpiraTeamProject project : projects) {
       //build the URL for each project
       String url = credentials.getUrl() +
-                   "/services/v5_0/RestService.svc/projects/" + projectId + "/incidents/search" +
+                   "/services/v5_0/RestService.svc/projects/" + project.getProjectId() + "/incidents/search" +
                    "?start_row=1&number_rows=1000&sort_by=Priority&username=" + credentials.getUsername() +
                    "&api-key=" + credentials.getToken();
       //add ability to read from the InputStream
@@ -171,27 +172,35 @@ public class SpiraTeamUtil {
    * @return A list of all the projectIds available to the current user
    * @throws IOException If the URL is invalid
    */
-  private static ArrayList<Integer> getAvailableProjects(SpiraTeamCredentials credentials) throws IOException {
-    //create the URL
-    String url = credentials.getUrl() + "/services/v5_0/RestService.svc/projects?username="
-                 + credentials.getUsername() + "&api-key=" + credentials.getToken();
-    //perform an HTTP GET request on the specified URL
-    InputStream stream = httpGet(url);
-    Gson gson = new Gson();
-    //create a JSON reader from the JSON sent from the GET request
-    JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(stream)));
-    //turn JSON into an ArrayList
-    ArrayList<LinkedTreeMap> jsonList = gson.fromJson(reader, ArrayList.class);
-    //the list to be returned
-    ArrayList<Integer> out = new ArrayList<>();
-    //loop through each map in the list
-    for (LinkedTreeMap map : jsonList) {
-      //retrieve the project ID
-      Double toAdd = (Double)map.get("ProjectId");
-      //add the ID to the output list
-      out.add(toAdd.intValue());
+  public static ArrayList<SpiraTeamProject> getAvailableProjects(SpiraTeamCredentials credentials) {
+    try {
+      //create the URL
+      String url = credentials.getUrl() + "/services/v5_0/RestService.svc/projects?username="
+                   + credentials.getUsername() + "&api-key=" + credentials.getToken();
+      //perform an HTTP GET request on the specified URL
+      InputStream stream = httpGet(url);
+      Gson gson = new Gson();
+      //create a JSON reader from the JSON sent from the GET request
+      JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(stream)));
+      //turn JSON into an ArrayList
+      ArrayList<LinkedTreeMap> jsonList = gson.fromJson(reader, ArrayList.class);
+      //the list to be returned
+      ArrayList<SpiraTeamProject> out = new ArrayList<>();
+      //loop through each map in the list
+      for (LinkedTreeMap map : jsonList) {
+        //retrieve the project ID
+        Double projectId = (Double)map.get("ProjectId");
+        //retrieve the project Name
+        String projectName = (String)map.get("Name");
+        //add the project to the output list
+        out.add(new SpiraTeamProject(projectName, projectId.intValue()));
+      }
+      return out;
     }
-    return out;
+    catch(Exception e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   /**

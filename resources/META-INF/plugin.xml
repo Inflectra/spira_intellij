@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.inflectra.SpiraTeam</id>
   <name>SpiraTeam Plugin</name>
-  <version>1.1</version>
+  <version>1.2</version>
   <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
 
   <description><![CDATA[
@@ -10,10 +10,7 @@
 
   <change-notes><![CDATA[
       <ul>
-        <li>Added a new section at the top of the tool window where users can go to their my page, refresh and re-authenticate</li>
-        <li>Plug-in will remember the last opened artifact through refreshes and restarts</li>
-        <li>Added a SpiraTeam section in the "Tools" menu</li>
-        <li>Fixed conflicting component names bug</li>
+        <li></li>
       </ul>
 
     ]]>
