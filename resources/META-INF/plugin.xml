@@ -1,32 +1,32 @@
 <idea-plugin>
   <id>com.inflectra.SpiraTeam</id>
   <name>SpiraTeam Plugin</name>
-  <version>1.0</version>
+  <version>1.1</version>
   <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
-  <!--  <vendor email="" url="https://www.jetbrains.com/support">JetBrains</vendor> -->
 
   <description><![CDATA[
-      Plugin for SpiraTeam
+      Plugin for SpiraTeam by Inflectra Corporation
     ]]></description>
 
   <change-notes><![CDATA[
-      Plugin now persists credentials through restarts
+      <ul>
+        <li>Added a new section at the top of the tool window where users can go to their my page, refresh and re-authenticate</li>
+        <li>Plug-in will remember the last opened artifact through refreshes and restarts</li>
+        <li>Added a SpiraTeam section in the "Tools" menu</li>
+        <li>Fixed conflicting component names bug</li>
+      </ul>
+
     ]]>
   </change-notes>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
   <idea-version since-build="145.0"/>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
-       on how to target different products -->
   <depends>com.intellij.modules.lang</depends>
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <toolWindow id="SpiraTeam Window" icon="/icons/spira-icon.png" anchor="right"
+    <toolWindow id="SpiraTeam" icon="/icons/spira-icon.png" anchor="right"
                 factoryClass="com.inflectra.idea.ui.SpiraToolWindowFactory"/>
-    <applicationService  serviceInterface="com.inflectra.idea.core.SpiraTeamCredentials"
-                         serviceImplementation="com.inflectra.idea.core.SpiraTeamCredentials"/>
   </extensions>
   <application-components>
     <component>
@@ -36,12 +36,28 @@
   </application-components>
 
   <actions>
-    <!-- Add your actions here -->
+    <group id="SpiraTeam.ActiveToolbar" text="SpiraTeam" popup="true">
+      <!-- Need to reference the actions for them to show up -->
+      <reference id="SpiraTeamLogin"/>
+      <reference id="SpiraTeamRefresh"/>
+      <reference id="SpiraTeamMyPage"/>
+      <add-to-group group-id="ToolsMenu" anchor="first"/>
+    </group>
 
-    <action id="SpiraTeamLogin" class="com.inflectra.idea.ui.SpiraTeamLogin" text="SpiraTeam Login"
+    <!-- Add your actions here -->
+    <action id="SpiraTeamLogin" class="com.inflectra.idea.ui.SpiraTeamLogin" text="Login"
             description="Prompt to login to SpiraTeam">
-      <add-to-group group-id="HelpMenu" anchor="first"/>
+      <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
+    </action>
+    <action id="SpiraTeamRefresh" class="com.inflectra.idea.ui.SpiraTeamRefresh" text="Refresh"
+            description="Refresh the artifacts from SpiraTeam SpiraTeam">
+      <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="first"/>
+    </action>
+    <action id="SpiraTeamMyPage" class="com.inflectra.idea.ui.SpiraTeamGotoMyPage" text="My Page"
+            description="Open the SpiraTeam home page in browser">
+      <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
     </action>
   </actions>
+
 
 </idea-plugin>

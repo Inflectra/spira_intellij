@@ -16,32 +16,26 @@
 package com.inflectra.idea.ui;
 
 import com.inflectra.idea.core.SpiraTeamCredentials;
+import com.inflectra.idea.core.SpiraTeamUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.project.Project;
+
+import java.net.URI;
 
 /**
- * Action which allows the user to log into SpiraTeam
+ * Action which, when clicked, opens the user's My Page in browser
  * @author Peter Geertsema
  */
-public class SpiraTeamLogin extends AnAction {
-
-  private SpiraTeamCredentials credentials;
-
-  public SpiraTeamLogin() {
-    super("SpiraTeam Login");
-    credentials = ServiceManager.getService(SpiraTeamCredentials.class);
-  }
+public class SpiraTeamGotoMyPage extends AnAction {
 
   @Override
-  public void actionPerformed(AnActionEvent event) {
-    //get the project associated with the event
-    Project project = event.getData(PlatformDataKeys.PROJECT);
-    //prompt the user to log in
-    SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, credentials);
-    //show the dialog
-    dialog.show();
+  public void actionPerformed(AnActionEvent e) {
+    //get the authentication credentials from the IDE
+    SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
+    //create the MyPage URL
+    URI myPage = SpiraTeamUtil.getMyPageURL(credentials);
+    //open the URL
+    SpiraTeamUtil.openURL(myPage);
   }
 }

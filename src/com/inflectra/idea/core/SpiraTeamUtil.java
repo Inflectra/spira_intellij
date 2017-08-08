@@ -74,6 +74,21 @@ public class SpiraTeamUtil {
     }
   }
 
+  public static URI getMyPageURL(SpiraTeamCredentials credentials) {
+    try {
+      //need to have a project ID in the URL for it to work
+      ArrayList<Integer> availableProjects = getAvailableProjects(credentials);
+      if (availableProjects.size() > 0) {
+        return new URI(credentials.getUrl() + "/" + availableProjects.get(0) + "/MyPage.aspx");
+      }
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+      //should never happen as long as credentials are correct
+    }
+    return null;
+  }
+
   /**
    * @param artifact The artifact we are dealing with
    * @param baseURL  The base URL of the user
