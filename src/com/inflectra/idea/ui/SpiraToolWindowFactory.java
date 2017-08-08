@@ -20,6 +20,10 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.stream.JsonReader;
 import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
+import com.inflectra.idea.core.listeners.HyperlinkListener;
+import com.inflectra.idea.core.listeners.TopLabelMouseListener;
+import com.inflectra.idea.core.listeners.TreeListener;
+import com.inflectra.idea.core.listeners.UsernameListener;
 import com.inflectra.idea.core.model.*;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
@@ -29,22 +33,16 @@ import com.intellij.ui.JBSplitter;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.content.ContentManager;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.font.TextAttribute;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Is the 'core' of the plug-in's UI, this is the class from which the SpiraToolWindow originates from
@@ -125,7 +123,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   /**
    * Show information in the bottom panel about the provided artifact
    * @param artifact The artifact to show information about
-   * @param baseURL The base URL of the user
+   * @param credentials The log-in credentials of the user
    * @param label The label that was just selected
    */
   public void showInformation(Artifact artifact, SpiraTeamCredentials credentials, JBLabel label) {
@@ -215,8 +213,17 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     panel.setLayout(layout);
     panel.setBorder(new EmptyBorder(0,0,0,0));
 
-    JButton refresh = new JButton("Refresh");
+    //show who is signed in
+    JBLabel signedInText = new JBLabel("Signed in as: ");
+    panel.add(signedInText);
+    //clickable label
+    JBLabel signedInUser = new JBLabel(credentials.getUsername());
+    signedInUser.addMouseListener(new UsernameListener(credentials, project, signedInUser));
+    panel.add(signedInUser);
 
+    //click on button to refresh from server
+    JButton refresh = new JButton("Refresh");
+    //on button clicked
     refresh.addActionListener(l -> {
       topPanel.removeAll();
       bottomPanel.removeAll();
@@ -234,18 +241,17 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       }
     });
     panel.add(refresh);
-
-    //show who is signed in
-    JBLabel signedIn = new JBLabel("You are signed in as: " + credentials.getUsername());
-    panel.add(signedIn);
-    JButton change = new JButton("Change");
-    //open the login dialog when the button is clicked
-    change.addActionListener(l -> {
-      SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, credentials);
-      dialog.show();
+    JButton home = new JButton("Home");
+    //open My Page in browser when clicked
+    home.addActionListener(l -> {
+      //create the MyPage URL
+      URI myPage = SpiraTeamUtil.getMyPageURL(credentials);
+      //open the URL
+      SpiraTeamUtil.openURL(myPage);
     });
     //add the button to the panel
-    panel.add(change);
+    panel.add(home);
+
     //add the now populated panel to the top
     topPanel.add(panel);
   }
@@ -466,255 +472,5 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       //this listener shows the incidents panel when the incidents label is pressed
       incidentsLabel.addMouseListener(new TreeListener(incidents, incidentsLabel));
     }
-  }
-}
-
-/**
- * Adds functionality for creating custom trees
- * <p>When the user clicks the given label, the panel passed in with the artifact names is expanded</p>
- */
-class TreeListener implements MouseListener {
-  private static String expandButton = "▶ ";
-  private static String collapseButton = "▼ ";
-  JBPanel panel;
-  JBLabel label;
-  boolean isExpanded = false;
-
-  public TreeListener(JBPanel panel, JBLabel label) {
-    this.panel = panel;
-    this.label = label;
-    //add the expand button
-    String text = label.getText();
-    int startLoc = text.indexOf("<h2>") + 4;
-    //add in the expand button, which is smaller than the rest of the text
-    text = text.substring(0, startLoc) + "<span style=\"font-size: .6em; font-family: Arial\">" + expandButton + "</span>" + text.substring(startLoc);
-    label.setText(text);
-    //make the header color inactive by default
-    Color color = UIUtil.getHeaderInactiveColor();
-    label.setForeground(color);
-    //make panel invisible by default
-    panel.setVisible(false);
-  }
-
-  /**
-   * The only method we care about, the others are irrelevant
-   */
-  @Override
-  public void mouseClicked(MouseEvent e) {
-    //hide the list if it is already expanded
-    if (isExpanded) {
-      //hide the artifacts
-      panel.setVisible(false);
-      isExpanded = false;
-      //turn the collapse button into an expand button
-      String text = label.getText();
-      int startLoc = text.indexOf(collapseButton);
-      text = text.substring(0, startLoc) + expandButton + text.substring(startLoc + collapseButton.length());
-      //apply the changes to the label
-      label.setText(text);
-      //make the header appear inactive
-      Color color = UIUtil.getHeaderInactiveColor();
-      label.setForeground(color);
-    }
-    //show the list if it is not expanded
-    else {
-      //show the artifacts
-      panel.setVisible(true);
-      isExpanded = true;
-      //turn the expand button into a collapse button
-      String text = label.getText();
-      int startLoc = text.indexOf(expandButton);
-      text = text.substring(0, startLoc) + collapseButton + text.substring(startLoc + expandButton.length());
-      //apply the changes to the label
-      label.setText(text);
-      //make the header color be active
-      Color color = UIUtil.getActiveTextColor();
-      label.setForeground(color);
-    }
-  }
-
-  @Override
-  public void mousePressed(MouseEvent e) {
-
-  }
-
-  @Override
-  public void mouseReleased(MouseEvent e) {
-
-  }
-
-  @Override
-  public void mouseEntered(MouseEvent e) {
-    Color color = UIUtil.getHeaderActiveColor();
-    label.setForeground(color);
-  }
-
-  @Override
-  public void mouseExited(MouseEvent e) {
-    //only change color if it is not expanded
-    if(!isExpanded) {
-      Color color = UIUtil.getHeaderInactiveColor();
-      label.setForeground(color);
-    }
-    else {
-      Color color = UIUtil.getActiveTextColor();
-      label.setForeground(color);
-    }
-  }
-}
-
-/**
- * Allows users to click on labels and underlines the label when the user hovers over it
- */
-class TopLabelMouseListener implements MouseListener {
-  private Artifact artifact;
-  private JBLabel label;
-  /**
-   * Used only to show information in the bottom panel when a label is clicked
-   */
-  private SpiraToolWindowFactory window;
-  private SpiraTeamCredentials credentials;
-
-  public TopLabelMouseListener(Artifact artifact, JBLabel label, SpiraToolWindowFactory window, SpiraTeamCredentials credentials) {
-    this.artifact = artifact;
-    this.label = label;
-    this.window = window;
-    this.credentials = credentials;
-  }
-
-  @Override
-  public void mouseClicked(MouseEvent e) {
-    //show additional information on the artifact in the bottom panel
-    window.showInformation(artifact, credentials, label);
-  }
-
-  @Override
-  public void mousePressed(MouseEvent e) {
-    //do nothing
-  }
-
-  @Override
-  public void mouseReleased(MouseEvent e) {
-    //do nothing
-  }
-
-  /**
-   * Create an underline on the panel when hovered over
-   * @param e
-   */
-  @Override
-  public void mouseEntered(MouseEvent e) {
-    Font font = label.getFont();
-    //create a Map with the attributes of the font
-    Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
-    //turning on the underline
-    attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-    //setting the new font
-    label.setFont(font.deriveFont(attributes));
-    //set the cursor to the hand
-    label.setCursor(new Cursor(Cursor.HAND_CURSOR));
-  }
-
-  /**
-   * @return A JBPanel with information regarding to the current artifact
-   * @deprecated Popups are no longer used by the SpiraTeam Plugin
-   */
-  private JBPanel createPanel() {
-    JBPanel panel = new JBPanel();
-    panel.setBorder(new EmptyBorder(5, 5, 5, 5));
-    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-    //contains the artifact prefix and ID as well as the project
-    JBLabel title = new JBLabel(artifact.getPrefix() + ":" + artifact.getArtifactId() + "   Project: " + artifact.getProjectName());
-    panel.add(title);
-    //contains the description, wrapped in html as Description supports rich text
-    panel.add(new JBLabel("<html>Description: " + artifact.getDescription() + "</html>"));
-    return panel;
-
-  }
-
-  /**
-   * Remove the underline
-   */
-  @Override
-  public void mouseExited(MouseEvent e) {
-    Font font = label.getFont();
-    Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
-    //-1 is the constant for no underline
-    attributes.put(TextAttribute.UNDERLINE, -1);
-    //setting the new font
-    label.setFont(font.deriveFont(attributes));
-    //set the cursor back to normal
-    label.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-  }
-}
-
-/**
- * Used to open the given hyperlink when clicked
- */
-class HyperlinkListener implements MouseListener {
-  URI uri;
-  JBLabel label;
-
-  public HyperlinkListener(URI uri, JBLabel label) {
-    this.uri = uri;
-    this.label = label;
-    //make the header have the inactive color by default
-    Color color = UIUtil.getHeaderInactiveColor();
-    label.setForeground(color);
-  }
-
-  @Override
-  public void mouseClicked(MouseEvent e) {
-    //open the url
-    SpiraTeamUtil.openURL(uri);
-  }
-
-  @Override
-  public void mousePressed(MouseEvent e) {
-    //do nothing
-  }
-
-  @Override
-  public void mouseReleased(MouseEvent e) {
-    //do nothing
-  }
-
-  /**
-   * Uses HTML to add in an underline to the label
-   */
-  @Override
-  public void mouseEntered(MouseEvent e) {
-    String oldText = label.getText();
-    int startLoc = oldText.indexOf("<h2>");
-    int endLoc = oldText.indexOf("</h2>");
-    //add in the underline tag between the h2 tags
-    String newText = oldText.substring(0, startLoc + 4) + "<u>" +
-                     oldText.substring(startLoc+4, endLoc) + "</u>" + oldText.substring(endLoc);
-    //apply the changes to the label
-    label.setText(newText);
-    //set the color to be the active color, depending on the theme
-    Color color = UIUtil.getHeaderActiveColor();
-    label.setForeground(color);
-    //change the cursor
-    label.setCursor(new Cursor(Cursor.HAND_CURSOR));
-  }
-
-  /**
-   * Removes the HTML which underlines the label
-   */
-  @Override
-  public void mouseExited(MouseEvent e) {
-    String oldText = label.getText();
-    int startLoc = oldText.indexOf("<u>");
-    int endLoc = oldText.indexOf("</u>");
-    //remove the underline tags
-    String newText = oldText.substring(0, startLoc) + oldText.substring(startLoc+3, endLoc) + oldText.substring(endLoc+4);
-    //apply the changes to the label
-    label.setText(newText);
-    //set the color to be the inactive color, depending on the theme
-    Color color = UIUtil.getHeaderInactiveColor();
-    label.setForeground(color);
-    //change the cursor
-    label.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
   }
 }

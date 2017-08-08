@@ -25,6 +25,7 @@ import com.intellij.ui.components.JBTextField;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * Contains the GUI used for logging in
@@ -62,6 +63,8 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
       url.setText(credentials.getUrl());
     }
     out.add(new JBLabel("SpiraTeam URL:"));
+    //add spacing between the label and the text field
+    out.add(Box.createRigidArea(new Dimension(0, 3)));
     out.add(url);
     username = new JBTextField();
     //show the username stored in credentials if it exists
@@ -69,6 +72,8 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
       username.setText(credentials.getUsername());
     }
     out.add(new JBLabel("Username:"));
+    //add spacing between the label and the text field
+    out.add(Box.createRigidArea(new Dimension(0, 3)));
     out.add(username);
     rssToken = new JBTextField();
     //show the RSS Token stored in credentials if it exists
@@ -76,6 +81,8 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
       rssToken.setText(credentials.getToken());
     }
     out.add(new JBLabel("RSS Token:"));
+    //add spacing between the label and the text field
+    out.add(Box.createRigidArea(new Dimension(0, 3)));
     out.add(rssToken);
 
     return out;

@@ -15,18 +15,27 @@
  */
 package com.inflectra.idea.ui;
 
+import com.inflectra.idea.core.SpiraTeamCredentials;
+import com.inflectra.idea.core.SpiraTeamUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.components.ServiceManager;
+
+import java.net.URI;
 
 /**
- * Action which, when clicked, refreshes the artifacts in SpiraTeam from the copy on the server
+ * Action which, when clicked, opens the user's My Page in browser
  * @author Peter Geertsema
  */
-public class SpiraTeamRefresh extends AnAction {
+public class SpiraTeamGotoMyPage extends AnAction {
 
   @Override
   public void actionPerformed(AnActionEvent e) {
-    //refresh the top and bottom panels
-    SpiraToolWindowFactory.reload(e.getProject());
+    //get the authentication credentials from the IDE
+    SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
+    //create the MyPage URL
+    URI myPage = SpiraTeamUtil.getMyPageURL(credentials);
+    //open the URL
+    SpiraTeamUtil.openURL(myPage);
   }
 }
