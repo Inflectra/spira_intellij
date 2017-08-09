@@ -16,34 +16,33 @@
 package com.inflectra.idea.core.model;
 
 /**
- * Enum which contains the different artifact types
+ * The type of requirement, task or incident example Bug, Change Request, etc
  * @author Peter Geertsema
  */
-public enum ArtifactType {
-  REQUIREMENT("Requirement"),
-  INCIDENT("Incident"),
-  TASK("Task");
-
-  private String artifactName;
-
-  ArtifactType(String artifactName) {
-    this.artifactName = artifactName;
-  }
-
-  public String getArtifactName() {
-    return artifactName;
-  }
-
+public class SpiraTeamArtifactType {
   /**
-   * @return The prefix of the artifact type, example IN for Incidents
+   * The ID of the type
    */
-  public String getPrefix() {
-    if(this == REQUIREMENT)
-      return "RQ";
-    if(this == INCIDENT)
-      return "IN";
-    if(this == TASK)
-      return "TK";
-    return null;
+  int typeId;
+  /**
+   * The name of the type
+   */
+  String name;
+  public SpiraTeamArtifactType(int typeId, String name) {
+    this.typeId = typeId;
+    this.name = name;
+  }
+
+  public int getTypeId() {
+    return typeId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }

@@ -24,7 +24,9 @@ import com.inflectra.idea.core.listeners.HyperlinkListener;
 import com.inflectra.idea.core.listeners.TopLabelMouseListener;
 import com.inflectra.idea.core.listeners.TreeListener;
 import com.inflectra.idea.core.listeners.UsernameListener;
-import com.inflectra.idea.core.model.*;
+import com.inflectra.idea.core.model.artifacts.*;
+import com.inflectra.idea.ui.dialogs.SpiraTeamLoginDialog;
+import com.inflectra.idea.ui.dialogs.SpiraTeamNewArtifact;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -43,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Is the 'core' of the plug-in's UI, this is the class from which the SpiraToolWindow originates from
@@ -311,7 +314,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //getAssignedRequirements returns an InputStream with the JSON from the REST request, that is then read by the JsonReader
     JsonReader jsonReader = new JsonReader(new InputStreamReader(SpiraTeamUtil.getAssignedRequirements(credentials)));
     //Turn the JSON into something java understands
-    ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
+    List<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
     //only show requirements if there are any assigned to the user
     if(list.size() > 0) {
       //title label for requirements
@@ -421,7 +424,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //create a new Gson object
     Gson gson = new Gson();
     //list which contain all of the information on incidents from the REST request
-    ArrayList<LinkedTreeMap> list = SpiraTeamUtil.getAssignedIncidents(credentials);
+    List<LinkedTreeMap> list = SpiraTeamUtil.getAssignedIncidents(credentials);
     //only add incidents if there is at least one returned from the REST request
     if(list.size() > 0) {
       //incidents 'parent' label

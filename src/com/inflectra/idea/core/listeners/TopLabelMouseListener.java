@@ -16,7 +16,7 @@
 package com.inflectra.idea.core.listeners;
 
 import com.inflectra.idea.core.SpiraTeamCredentials;
-import com.inflectra.idea.core.model.Artifact;
+import com.inflectra.idea.core.model.artifacts.Artifact;
 import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;

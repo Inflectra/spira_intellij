@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.inflectra.idea.core.model;
+package com.inflectra.idea.core.model.artifacts;
 
 /**
  * Class which contains information common to all Artifact types.

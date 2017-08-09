@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.inflectra.idea.ui;
+package com.inflectra.idea.ui.dialogs;
 
 import com.inflectra.idea.core.SpiraTeamCredentials;
+import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;

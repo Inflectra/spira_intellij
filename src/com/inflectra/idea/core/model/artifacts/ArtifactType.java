@@ -13,15 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.inflectra.idea.core.model;
+package com.inflectra.idea.core.model.artifacts;
 
 /**
- * Represents a Task in Spira
+ * Enum which contains the different artifact types
  * @author Peter Geertsema
  */
-public class Task extends Artifact {
+public enum ArtifactType {
+  REQUIREMENT("Requirement"),
+  INCIDENT("Incident"),
+  TASK("Task");
 
-  public Task(int projectId, String projectName, int artifactId, String name, String priorityName) {
-    super(projectId, projectName, artifactId, ArtifactType.TASK, name, priorityName);
+  private String artifactName;
+
+  ArtifactType(String artifactName) {
+    this.artifactName = artifactName;
+  }
+
+  public String getArtifactName() {
+    return artifactName;
+  }
+
+  /**
+   * @return The prefix of the artifact type, example IN for Incidents
+   */
+  public String getPrefix() {
+    if(this == REQUIREMENT)
+      return "RQ";
+    if(this == INCIDENT)
+      return "IN";
+    if(this == TASK)
+      return "TK";
+    return null;
   }
 }

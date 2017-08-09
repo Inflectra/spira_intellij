@@ -15,7 +15,7 @@
  */
 package com.inflectra.idea.core;
 
-import com.inflectra.idea.core.model.ArtifactType;
+import com.inflectra.idea.core.model.artifacts.ArtifactType;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
@@ -105,7 +105,9 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
   public void setUsername(String username) {
     this.state.username = username;
   }
-
+  /**
+   * @return The RSS token
+   */
   public String getToken() {
     return state.token;
   }

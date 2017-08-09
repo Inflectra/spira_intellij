@@ -16,12 +16,34 @@
 package com.inflectra.idea.core.model;
 
 /**
- * Represents a Requirement in Spira
+ * Represents a priority in the SpiraTeam system
  * @author Peter Geertsema
  */
-public class Requirement extends Artifact {
+public class SpiraTeamPriority {
+  int priorityId;
+  String priorityName;
 
-  public Requirement(int projectId, String projectName, int artifactId, String name, String priorityName) {
-    super(projectId, projectName, artifactId, ArtifactType.REQUIREMENT, name, priorityName);
+  public SpiraTeamPriority(int priorityId, String priorityName){
+    this.priorityId = priorityId;
+    this.priorityName = priorityName;
+  }
+
+  /**
+   * @return The name of this priority
+   */
+  public String getPriorityName() {
+    return priorityName;
+  }
+
+  /**
+   * @return The ID of this priority
+   */
+  public int getPriorityId() {
+    return priorityId;
+  }
+
+  @Override
+  public String toString() {
+    return getPriorityName();
   }
 }
