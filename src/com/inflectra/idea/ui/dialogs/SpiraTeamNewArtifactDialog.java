@@ -132,6 +132,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
       }
     });
     out.add(projects);
+    out.add(Box.createRigidArea(new Dimension(0,10)));
 
     //the types of artifacts
     ArtifactType[] types = {ArtifactType.PLACERHOLDER, ArtifactType.REQUIREMENT, ArtifactType.TASK, ArtifactType.INCIDENT};
