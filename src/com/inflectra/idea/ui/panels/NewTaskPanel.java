@@ -40,6 +40,9 @@ public class NewTaskPanel extends NewArtifactPanel {
     SpiraTeamPriority[] priorities = SpiraTeamUtil.getTaskPriorities();
     priority = new ComboBox<>(priorities);
     add(priority);
+
+    //add the description
+    addDescription();
   }
 
   /**

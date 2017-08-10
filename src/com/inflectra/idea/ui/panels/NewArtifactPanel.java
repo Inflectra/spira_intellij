@@ -39,7 +39,17 @@ public abstract class NewArtifactPanel extends JBPanel {
   protected JBTextField name;
   protected ComboBox<SpiraTeamUser> owner;
   protected ComboBox<SpiraTeamPriority> priority;
+  protected JTextArea description;
   protected int projectId;
+
+  /**
+   * The panel on the left hand side with the names of fields
+   */
+  protected JBPanel fieldNames;
+  /**
+   * The panel on the right hand side with the fields
+   */
+  protected JBPanel fields;
 
   public NewArtifactPanel(SpiraTeamCredentials credentials, int projectId) {
     this.credentials = credentials;
@@ -51,6 +61,8 @@ public abstract class NewArtifactPanel extends JBPanel {
 
     //name of the artifact
     name = new JBTextField("Name");
+    //make the name not resize vertically
+    name.setMaximumSize(new Dimension(Integer.MAX_VALUE,name.getHeight()));
     add(name);
 
     //get the active users in the current project
@@ -65,6 +77,17 @@ public abstract class NewArtifactPanel extends JBPanel {
       }
     }
     add(owner);
+  }
+
+  /**
+   * Utility method called at the end of subclasses constructors to add the description
+   * <p>We want the description to be the very last field</p>
+   */
+  protected void addDescription() {
+    //the description
+    description = new JTextArea("Description");
+    description.setLineWrap(true);
+    add(description);
   }
 
   /**
@@ -93,5 +116,12 @@ public abstract class NewArtifactPanel extends JBPanel {
    */
   public int getProjectId() {
     return projectId;
+  }
+
+  /**
+   * @return The description the user has entered
+   */
+  public String getDescription() {
+    return description.getText();
   }
 }

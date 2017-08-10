@@ -40,6 +40,9 @@ public class NewRequirementPanel extends NewArtifactPanel {
     SpiraTeamPriority[] priorities = SpiraTeamUtil.getRequirementPriorities();
     priority = new ComboBox<>(priorities);
     add(priority);
+
+    //add the description
+    addDescription();
   }
 
   /**

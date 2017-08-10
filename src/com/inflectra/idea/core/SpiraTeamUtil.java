@@ -213,10 +213,10 @@ public class SpiraTeamUtil {
   }
 
   /**
-   * Returns an array of all the active users in the current project
+   * Returns an array of all the active users in the current project with an empty option
    * @param credentials
    * @param projectId The project to look in
-   * @return An array of all the active users in the current project
+   * @return An array of all the active users in the current project with an empty option
    */
   public static SpiraTeamUser[] getProjectUsers(SpiraTeamCredentials credentials, int projectId) {
     try {
@@ -229,8 +229,12 @@ public class SpiraTeamUtil {
       JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(stream)));
       //turn JSON into a List
       List<LinkedTreeMap> jsonList = gson.fromJson(reader, ArrayList.class);
-      //the array we will return. It is the same size as the above list
-      SpiraTeamUser[] out = new SpiraTeamUser[jsonList.size()];
+
+      //the array we will return. It is one larger as the above list to account for the empty option
+      SpiraTeamUser[] out = new SpiraTeamUser[jsonList.size() + 1];
+      //empty option will be second
+      out[1] = new SpiraTeamUser("-- None --", -1, "");
+
       for(int i=0; i<jsonList.size(); i++) {
         LinkedTreeMap map = jsonList.get(i);
         //get the properties
@@ -239,8 +243,15 @@ public class SpiraTeamUtil {
         String username = (String)map.get("UserName");
         //create the user
         SpiraTeamUser user = new SpiraTeamUser(fullName, userId, username);
-        //add the new user to the array
-        out[i] = user;
+        //if the user matches the logged-in user, store it in the first index of the array
+        if(username.equals(credentials.getUsername())) {
+          //current user in the first index of the array
+          out[0] = user;
+        }
+        else {
+          //add the new user to the array
+          out[i + 2] = user;
+        }
       }
       return out;
     }
@@ -267,8 +278,10 @@ public class SpiraTeamUtil {
       JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(stream)));
       //turn JSON into a List
       List<LinkedTreeMap> jsonList = gson.fromJson(reader, ArrayList.class);
-      //the array we will return. It is the same size as the above list
-      SpiraTeamPriority[] out = new SpiraTeamPriority[jsonList.size()];
+      //the array we will return. It is one larger than the above list to account for an empty option
+      SpiraTeamPriority[] out = new SpiraTeamPriority[jsonList.size() + 1];
+      //empty priority
+      out[0] = new SpiraTeamPriority(-1, "-- None --");
       for(int i=0; i<jsonList.size(); i++) {
         LinkedTreeMap map = jsonList.get(i);
         //get the properties
@@ -276,8 +289,8 @@ public class SpiraTeamUtil {
         String priorityName = (String)map.get("Name");
         //create the priority
         SpiraTeamPriority toAdd = new SpiraTeamPriority(priorityId, priorityName);
-        //add the priority to the array
-        out[i] = toAdd;
+        //add the priority to the array, +1 as we need to account for the empty option
+        out[i+1] = toAdd;
       }
       return out;
     }
@@ -292,26 +305,22 @@ public class SpiraTeamUtil {
    */
   public static SpiraTeamPriority[] getRequirementPriorities() {
     //the array to return
-    SpiraTeamPriority[] out = new SpiraTeamPriority[4];
+    SpiraTeamPriority[] out = new SpiraTeamPriority[5];
     //add the priorities
-    out[0] = new SpiraTeamPriority(1, "1 - Critical");
-    out[1] = new SpiraTeamPriority(2, "2 - High");
-    out[2] = new SpiraTeamPriority(3, "3 - Medium");
-    out[3] = new SpiraTeamPriority(4, "4 - Low");
+    //need to have an empty priority option
+    out[0] = new SpiraTeamPriority(-1, "-- None --");
+    out[1] = new SpiraTeamPriority(1, "1 - Critical");
+    out[2] = new SpiraTeamPriority(2, "2 - High");
+    out[3] = new SpiraTeamPriority(3, "3 - Medium");
+    out[4] = new SpiraTeamPriority(4, "4 - Low");
     return out;
   }
   /**
    * @return An array of the priorities for tasks
    */
   public static SpiraTeamPriority[] getTaskPriorities() {
-    //the array to return
-    SpiraTeamPriority[] out = new SpiraTeamPriority[4];
-    //add the priorities
-    out[0] = new SpiraTeamPriority(1, "1 - Critical");
-    out[1] = new SpiraTeamPriority(2, "2 - High");
-    out[2] = new SpiraTeamPriority(3, "3 - Medium");
-    out[3] = new SpiraTeamPriority(4, "4 - Low");
-    return out;
+    //currently, the task and requirement priorities are the same
+    return getRequirementPriorities();
   }
 
   /**

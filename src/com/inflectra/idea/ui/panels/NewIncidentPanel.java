@@ -20,7 +20,6 @@ import com.inflectra.idea.core.SpiraTeamUtil;
 import com.inflectra.idea.core.model.SpiraTeamArtifactType;
 import com.inflectra.idea.core.model.SpiraTeamPriority;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.components.JBTextField;
 
 /**
  * Panel used in SpiraTeamNewArtifact which stores the fields necessary to create a new incident
@@ -28,22 +27,20 @@ import com.intellij.ui.components.JBTextField;
  */
 public class NewIncidentPanel extends NewArtifactPanel {
   private ComboBox<SpiraTeamArtifactType> incidentType;
-  private JBTextField description;
   public NewIncidentPanel(SpiraTeamCredentials credentials, int projectId) {
     super(credentials, projectId);
     //the types of tasks in the given project
     SpiraTeamArtifactType[] incidentTypesArr = SpiraTeamUtil.getIncidentTypes(credentials, projectId);
     incidentType = new ComboBox<>(incidentTypesArr);
     add(incidentType);
-    //the description
-    //TODO: Add support for rich text?
-    description = new JBTextField("Description");
-    add(description);
 
     //priority of the incident
     SpiraTeamPriority[] priorities = SpiraTeamUtil.getProjectIncidentPriorities(credentials, projectId);
     priority = new ComboBox<>(priorities);
     add(priority);
+
+    //add the description
+    addDescription();
   }
 
   /**
@@ -53,10 +50,5 @@ public class NewIncidentPanel extends NewArtifactPanel {
     return (SpiraTeamArtifactType) incidentType.getSelectedItem();
   }
 
-  /**
-   * @return The description the user has entered
-   */
-  public String getDescription() {
-    return description.getText();
-  }
+
 }

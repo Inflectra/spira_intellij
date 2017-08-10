@@ -28,9 +28,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
-import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.components.JBTextField;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -53,6 +51,7 @@ public class SpiraTeamNewArtifact extends DialogWrapper {
    */
   int projectId;
 
+  //panels which store information about their respective artifacts
   private NewRequirementPanel requirementPanel;
   private NewTaskPanel taskPanel;
   private NewIncidentPanel incidentPanel;
@@ -81,7 +80,7 @@ public class SpiraTeamNewArtifact extends DialogWrapper {
     BoxLayout layout = new BoxLayout(fields, BoxLayout.Y_AXIS);
     fields.setLayout(layout);
     fields.setAlignmentX(0);
-    fields.setBorder(new EmptyBorder(0,0,0,0));
+    fields.setBorder(new EmptyBorder(10,0,0,0));
 
     //get the projects available to the current user
     List<SpiraTeamProject> availableProjectsList = SpiraTeamUtil.getAvailableProjects(credentials);
@@ -95,6 +94,7 @@ public class SpiraTeamNewArtifact extends DialogWrapper {
     projectId = availableProjectsArray[0].getProjectId();
     //create the combo box
     ComboBox<SpiraTeamProject> projects = new ComboBox<>(availableProjectsArray);
+    projects.setAlignmentX(0);
     //listener called every time a new option is selected
     projects.addActionListener(l -> {
       SpiraTeamProject selectedItem = (SpiraTeamProject) projects.getSelectedItem();
@@ -112,11 +112,10 @@ public class SpiraTeamNewArtifact extends DialogWrapper {
     });
     out.add(projects);
 
-
-
     //the types of artifacts
     ArtifactType[] types = {ArtifactType.REQUIREMENT, ArtifactType.TASK, ArtifactType.INCIDENT};
     ComboBox<ArtifactType> typeSelection = new ComboBox<>(types);
+    typeSelection.setAlignmentX(0);
     //default is requirement
     typeSelection.setSelectedIndex(0);
     //called every time an option is clicked
@@ -137,6 +136,7 @@ public class SpiraTeamNewArtifact extends DialogWrapper {
     out.add(fields);
     //add the requirement fields
     addRequirement(fields);
+
     return out;
   }
 
@@ -183,15 +183,28 @@ public class SpiraTeamNewArtifact extends DialogWrapper {
     return null;
   }
 
+  /**
+   * Called when the user presses OK. This actually adds the artifact to the SpiraTeam system
+   */
   @Override
   protected void doOKAction() {
     if(type == ArtifactType.REQUIREMENT) {
       //create the body of the request
       String body = "{\"Name\": \"" + requirementPanel.getArtifactName() + "\"" +
       ", \"RequirementTypeId\": " + requirementPanel.getSelectedRequirementType().getTypeId() +
-      ", \"OwnerId\": " + requirementPanel.getSelectedOwner().getUserId() +
-      ", \"ImportanceId\": " + requirementPanel.getSelectedPriority().getPriorityId() +
-                    "}";
+      ", \"Description\": \"" + requirementPanel.getDescription() + "\"";
+      int userId = requirementPanel.getSelectedOwner().getUserId();
+      //only add the owner if it is not -1, which is assigned if the user makes no choice
+      if(userId != -1) {
+        body += ", \"OwnerId\": " + requirementPanel.getSelectedOwner().getUserId();
+      }
+      int priorityId = requirementPanel.getSelectedPriority().getPriorityId();
+      //only add the priority if it is not -1, which is assigned if the user makes no choice
+      if(priorityId != -1) {
+        body += ", \"ImportanceId\": " + requirementPanel.getSelectedPriority().getPriorityId();
+      }
+
+      body += "}";
       //create the requirement in the system
       SpiraTeamUtil.createRequirement(credentials, body, projectId);
     }
@@ -199,11 +212,21 @@ public class SpiraTeamNewArtifact extends DialogWrapper {
       //create the body of the request
       String body = "{\"Name\": \"" + taskPanel.getArtifactName() + "\"" +
       ", \"TaskTypeId\": " + taskPanel.getSelectedTaskType().getTypeId() +
-      ", \"OwnerId\": " + taskPanel.getSelectedOwner().getUserId() +
-      ", \"TaskPriorityId\": " + taskPanel.getSelectedPriority().getPriorityId() +
-      ", \"TaskStatusId\": 1" +
-                    "}";
+      ", \"Description\": \"" + taskPanel.getDescription() + "\"";
+      int ownerId = taskPanel.getSelectedOwner().getUserId();
+      //only add the owner if it is not -1, which is assigned if the user makes no choice
+      if(ownerId != -1) {
+        body += ", \"OwnerId\": " + taskPanel.getSelectedOwner().getUserId();
+      }
+      int priorityId = taskPanel.getSelectedPriority().getPriorityId();
+      //only add the priority if it is not -1, which is assigned if the user makes no choice
+      if(priorityId != -1) {
+        body += ", \"TaskPriorityId\": " + taskPanel.getSelectedPriority().getPriorityId();
+      }
+
+      body += ", \"TaskStatusId\": 1";
       //TODO: Add support for different task status ID's
+      body += "}";
       //create the task in the system
       SpiraTeamUtil.createTask(credentials, body, projectId);
     }
@@ -211,10 +234,18 @@ public class SpiraTeamNewArtifact extends DialogWrapper {
       //create the body of the request
       String body = "{\"Name\": \"" + incidentPanel.getArtifactName() + "\"" +
       ", \"IncidentTypeId\": " + incidentPanel.getSelectedIncidentType().getTypeId() +
-      ", \"Description\": \"" + incidentPanel.getDescription() + "\"" +
-      ", \"OwnerId\": " + incidentPanel.getSelectedOwner().getUserId() +
-      ", \"PriorityId\": " + incidentPanel.getSelectedPriority().getPriorityId() +
-                    "}";
+      ", \"Description\": \"" + incidentPanel.getDescription() + "\"";
+      int ownerId = incidentPanel.getSelectedOwner().getUserId();
+      //only add the owner if it is not -1, which is assigned if the user makes no choice
+      if(ownerId != -1) {
+        body += ", \"OwnerId\": " + incidentPanel.getSelectedOwner().getUserId();
+      }
+      int priorityId = incidentPanel.getSelectedPriority().getPriorityId();
+      //only add the priority if it is not -1, which is assigned if the user makes no choice
+      if(priorityId != -1) {
+        body += ", \"PriorityId\": " + incidentPanel.getSelectedPriority().getPriorityId();
+      }
+      body+="}";
       //create the incident in the system
       SpiraTeamUtil.createIncident(credentials, body, projectId);
     }
