@@ -16,10 +16,12 @@
 package com.inflectra.idea.ui.panels;
 
 import com.inflectra.idea.core.SpiraTeamCredentials;
-import com.inflectra.idea.core.SpiraTeamUtil;
+import com.inflectra.idea.core.model.SpiraTeamArtifactType;
 import com.inflectra.idea.core.model.SpiraTeamPriority;
 import com.inflectra.idea.core.model.SpiraTeamUser;
+import com.inflectra.idea.core.model.artifacts.ArtifactType;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBTextField;
 
@@ -32,69 +34,66 @@ import java.awt.*;
  * @author Peter Geertsema
  */
 public abstract class NewArtifactPanel extends JBPanel {
+  protected ComboBox<SpiraTeamArtifactType> artifactType;
   protected SpiraTeamCredentials credentials;
   /**
    * The name of the artifact
    */
-  protected JBTextField name;
+  protected JBTextField nameField;
   protected ComboBox<SpiraTeamUser> owner;
   protected ComboBox<SpiraTeamPriority> priority;
   protected JTextArea description;
   protected int projectId;
 
-  /**
-   * The panel on the left hand side with the names of fields
-   */
-  protected JBPanel fieldNames;
-  /**
-   * The panel on the right hand side with the fields
-   */
-  protected JBPanel fields;
-
-  public NewArtifactPanel(SpiraTeamCredentials credentials, int projectId) {
+  public NewArtifactPanel(SpiraTeamCredentials credentials, int projectId, String name, String description) {
     this.credentials = credentials;
     this.projectId = projectId;
     //make our panel have an empty border and lay out its children vertically
     setBorder(new EmptyBorder(0,0,0,0));
     LayoutManager layout = new BoxLayout(this, BoxLayout.Y_AXIS);
     setLayout(layout);
+    //only add stuff if the projectId is valid
 
     //name of the artifact
-    name = new JBTextField("Name");
+    nameField = new JBTextField(name);
+    nameField.setAlignmentX(0);
+    JBLabel nameLabel = new JBLabel("Name: ");
+    nameLabel.setAlignmentX(0);
+    add(nameLabel);
     //make the name not resize vertically
-    name.setMaximumSize(new Dimension(Integer.MAX_VALUE,name.getHeight()));
-    add(name);
+    nameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, nameField.getHeight()));
+    add(nameField);
+    add(Box.createRigidArea(new Dimension(0, 10)));
 
-    //get the active users in the current project
-    SpiraTeamUser[] users = SpiraTeamUtil.getProjectUsers(credentials, projectId);
-    owner = new ComboBox<>(users);
-    //set the default selected user to the one currently signed in
-    for(int i=0; i<users.length; i++) {
-      //if we find the user, set the default index to that user
-      if(users[i].getUsername().equals(credentials.getUsername())) {
-        owner.setSelectedIndex(i);
-        break;
-      }
-    }
-    add(owner);
+    addDescription(description);
+
+    add(Box.createRigidArea(new Dimension(0, 5)));
+
   }
 
   /**
-   * Utility method called at the end of subclasses constructors to add the description
-   * <p>We want the description to be the very last field</p>
+   * Utility method called which adds the description label and text area to the pane
+   * @param d The description to add
    */
-  protected void addDescription() {
+  protected void addDescription(String d) {
     //the description
-    description = new JTextArea("Description");
+    JBLabel descriptionLabel = new JBLabel("Description: ");
+    descriptionLabel.setAlignmentX(0);
+    add(descriptionLabel);
+    description = new JTextArea(d);
+    description.setAlignmentX(0);
     description.setLineWrap(true);
     add(description);
+    add(Box.createRigidArea(new Dimension(0,10)));
   }
 
   /**
    * @return The name the user has put in
    */
   public String getArtifactName() {
-    return name.getText();
+    if(nameField != null)
+      return nameField.getText();
+    return "";
   }
 
   /**
@@ -122,6 +121,27 @@ public abstract class NewArtifactPanel extends JBPanel {
    * @return The description the user has entered
    */
   public String getDescription() {
-    return description.getText();
+    if(description != null)
+      return description.getText();
+    return "";
   }
+
+  /**
+   * @return The selected type of artifact ex Bug, change request, etc
+   */
+  public SpiraTeamArtifactType getSelectedArtifactType() {
+    return (SpiraTeamArtifactType) artifactType.getSelectedItem();
+  }
+
+  public ArtifactType getArtifactType() {
+    if(this instanceof  NewIncidentPanel)
+      return ArtifactType.INCIDENT;
+    else if(this instanceof  NewTaskPanel)
+      return ArtifactType.TASK;
+    else if(this instanceof NewRequirementPanel)
+      return ArtifactType.REQUIREMENT;
+    //impossible to get here
+    return null;
+  }
+
 }

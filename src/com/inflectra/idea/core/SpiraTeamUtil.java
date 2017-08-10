@@ -18,12 +18,12 @@ package com.inflectra.idea.core;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.stream.JsonReader;
+import com.inflectra.idea.core.model.SpiraTeamArtifactType;
 import com.inflectra.idea.core.model.SpiraTeamPriority;
+import com.inflectra.idea.core.model.SpiraTeamProject;
 import com.inflectra.idea.core.model.SpiraTeamUser;
 import com.inflectra.idea.core.model.artifacts.Artifact;
 import com.inflectra.idea.core.model.artifacts.ArtifactType;
-import com.inflectra.idea.core.model.SpiraTeamArtifactType;
-import com.inflectra.idea.core.model.SpiraTeamProject;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;

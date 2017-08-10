@@ -59,6 +59,7 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     out.setLayout(new BoxLayout(out, BoxLayout.Y_AXIS));
     //URL text field
     url = new JBTextField();
+    url.setAlignmentX(0);
     //show the URL stored in credentials if it exists
     if (credentials.getUrl() != null) {
       url.setText(credentials.getUrl());
@@ -67,7 +68,11 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     //add spacing between the label and the text field
     out.add(Box.createRigidArea(new Dimension(0, 3)));
     out.add(url);
+    //create spacing between them
+    out.add(Box.createRigidArea(new Dimension(0,10)));
+
     username = new JBTextField();
+    username.setAlignmentX(0);
     //show the username stored in credentials if it exists
     if (credentials.getUsername() != null) {
       username.setText(credentials.getUsername());
@@ -76,7 +81,11 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     //add spacing between the label and the text field
     out.add(Box.createRigidArea(new Dimension(0, 3)));
     out.add(username);
+    //create spacing between them
+    out.add(Box.createRigidArea(new Dimension(0,10)));
+
     rssToken = new JBTextField();
+    rssToken.setAlignmentX(0);
     //show the RSS Token stored in credentials if it exists
     if (credentials.getToken() != null) {
       rssToken.setText(credentials.getToken());

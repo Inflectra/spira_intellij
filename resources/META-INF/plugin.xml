@@ -38,6 +38,7 @@
       <reference id="SpiraTeamLogin"/>
       <reference id="SpiraTeamRefresh"/>
       <reference id="SpiraTeamMyPage"/>
+      <reference id="SpiraTeamNewArtifact"/>
       <add-to-group group-id="ToolsMenu" anchor="first"/>
     </group>
 
@@ -52,6 +53,10 @@
     </action>
     <action id="SpiraTeamMyPage" class="com.inflectra.idea.ui.SpiraTeamGotoMyPage" text="My Page"
             description="Open the SpiraTeam home page in browser">
+      <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
+    </action>
+    <action id="SpiraTeamNewArtifact" class="com.inflectra.idea.ui.SpiraTeamNewArtifact" text="New Item"
+            description="Create a new item in SpiraTeam">
       <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
     </action>
   </actions>

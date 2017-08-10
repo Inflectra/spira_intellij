@@ -22,7 +22,8 @@ package com.inflectra.idea.core.model.artifacts;
 public enum ArtifactType {
   REQUIREMENT("Requirement"),
   INCIDENT("Incident"),
-  TASK("Task");
+  TASK("Task"),
+  PLACERHOLDER("-- Select Type --");
 
   private String artifactName;
 
@@ -45,5 +46,10 @@ public enum ArtifactType {
     if(this == TASK)
       return "TK";
     return null;
+  }
+
+  @Override
+  public String toString() {
+    return getArtifactName();
   }
 }

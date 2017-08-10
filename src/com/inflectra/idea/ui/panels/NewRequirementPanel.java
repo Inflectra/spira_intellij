@@ -19,7 +19,13 @@ import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
 import com.inflectra.idea.core.model.SpiraTeamArtifactType;
 import com.inflectra.idea.core.model.SpiraTeamPriority;
+import com.inflectra.idea.core.model.SpiraTeamUser;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBPanel;
+
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 
 /**
  * Panel used in SpiraTeamNewArtifact which stores the fields necessary to create a new requirement
@@ -27,29 +33,81 @@ import com.intellij.openapi.ui.ComboBox;
  */
 public class NewRequirementPanel extends NewArtifactPanel {
   SpiraTeamCredentials credentials;
-  ComboBox<SpiraTeamArtifactType> requirementType;
-  public NewRequirementPanel(SpiraTeamCredentials credentials, int projectId) {
-    super(credentials, projectId);
+
+  public NewRequirementPanel(SpiraTeamCredentials credentials, int projectId, String name, String description) {
+    super(credentials, projectId, name, description);
     this.credentials = credentials;
-    SpiraTeamArtifactType[] requirementTypesArr = SpiraTeamUtil.getRequirementTypes(credentials, projectId);
+
+    //panel which allows type and priority to be side-by-side
+    JBPanel panel = new JBPanel();
+    panel.setAlignmentX(0);
+    panel.setBorder(new EmptyBorder(0, 0, 0, 0));
+    LayoutManager layout = new GridLayout(2,3);
+    panel.setLayout(layout);
+
+    //only add stuff if the projectId is valid
+    SpiraTeamArtifactType[] requirementTypesArr;
+    if(projectId != -1) {
+      requirementTypesArr = SpiraTeamUtil.getRequirementTypes(credentials, projectId);
+    }
+    else {
+      requirementTypesArr = new SpiraTeamArtifactType[1];
+      requirementTypesArr[0] = new SpiraTeamArtifactType(-1, "Please select a project");
+    }
     //field for the type ID
-    requirementType = new ComboBox<>(requirementTypesArr);
-    add(requirementType);
+    artifactType = new ComboBox<>(requirementTypesArr);
+    artifactType.setAlignmentX(0);
+    JBLabel requirementTypeLabel = new JBLabel("Type: ");
+    requirementTypeLabel.setAlignmentX(0);
+    panel.add(requirementTypeLabel);
 
     //priority of the incident
-    SpiraTeamPriority[] priorities = SpiraTeamUtil.getRequirementPriorities();
+    SpiraTeamPriority[] priorities;
+    if(projectId != -1) {
+      priorities = SpiraTeamUtil.getRequirementPriorities();
+    }
+    else {
+      priorities = new SpiraTeamPriority[1];
+      priorities[0] = new SpiraTeamPriority(-1, "Please select a project");
+    }
     priority = new ComboBox<>(priorities);
-    add(priority);
+    priority.setAlignmentX(0);
+    JBLabel priorityLabel = new JBLabel("Priority: ");
+    priorityLabel.setAlignmentX(0);
+    panel.add(priorityLabel);
 
-    //add the description
-    addDescription();
+    //get the active users in the current project
+    SpiraTeamUser[] users;
+    if(projectId != -1) {
+      users = SpiraTeamUtil.getProjectUsers(credentials, projectId);
+    }
+    else {
+      users = new SpiraTeamUser[1];
+      users[0] = new SpiraTeamUser("Please select a project",-1, "");
+    }
+    owner = new ComboBox<>(users);
+    owner.setAlignmentX(0);
+    //set the default selected user to the one currently signed in
+    for (int i = 0; i < users.length; i++) {
+      //if we find the user, set the default index to that user
+      if (users[i].getUsername().equals(credentials.getUsername())) {
+        owner.setSelectedIndex(i);
+        break;
+      }
+    }
+    JBLabel ownerLabel = new JBLabel("Owner: ");
+    ownerLabel.setAlignmentX(0);
+    panel.add(ownerLabel);
+
+    panel.add(artifactType);
+    panel.add(priority);
+    panel.add(owner);
+
+    add(panel);
   }
 
-  /**
-   * @return The requirement type the user has selected
-   */
-  public SpiraTeamArtifactType getSelectedRequirementType() {
-    return (SpiraTeamArtifactType)requirementType.getSelectedItem();
+  public NewRequirementPanel(SpiraTeamCredentials credentials, int projectId) {
+    this(credentials, projectId, "", "");
   }
 
 }

@@ -26,7 +26,7 @@ import com.inflectra.idea.core.listeners.TreeListener;
 import com.inflectra.idea.core.listeners.UsernameListener;
 import com.inflectra.idea.core.model.artifacts.*;
 import com.inflectra.idea.ui.dialogs.SpiraTeamLoginDialog;
-import com.inflectra.idea.ui.dialogs.SpiraTeamNewArtifact;
+import com.inflectra.idea.ui.dialogs.SpiraTeamNewArtifactDialog;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -257,7 +257,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
 
     JButton newArtifact = new JButton("New");
     newArtifact.addActionListener(l -> {
-      SpiraTeamNewArtifact artifact = new SpiraTeamNewArtifact(project, credentials);
+      SpiraTeamNewArtifactDialog artifact = new SpiraTeamNewArtifactDialog(project, credentials);
       artifact.show();
     });
     panel.add(newArtifact);
