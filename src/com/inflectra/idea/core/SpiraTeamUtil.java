@@ -28,10 +28,7 @@ import com.inflectra.idea.core.model.artifacts.ArtifactType;
 import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -500,7 +497,8 @@ public class SpiraTeamUtil {
    */
   public static InputStream httpPost(String input, String body) throws IOException {
     URL url = new URL(input);
-    HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+
+    HttpURLConnection connection = (HttpURLConnection)url.openConnection();
     //allow sending a request body
     connection.setDoOutput(true);
     connection.setRequestMethod("POST");
