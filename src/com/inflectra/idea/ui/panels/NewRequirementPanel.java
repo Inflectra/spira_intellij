@@ -54,56 +54,67 @@ public class NewRequirementPanel extends NewArtifactPanel {
       requirementTypesArr = new SpiraTeamArtifactType[1];
       requirementTypesArr[0] = new SpiraTeamArtifactType(-1, "Please select a project");
     }
-    //field for the type ID
-    artifactType = new ComboBox<>(requirementTypesArr);
-    artifactType.setAlignmentX(0);
-    JBLabel requirementTypeLabel = new JBLabel("Type: ");
-    requirementTypeLabel.setAlignmentX(0);
-    panel.add(requirementTypeLabel);
+    //only add properties if the user has access to types
+    if(requirementTypesArr != null && requirementTypesArr.length > 0) {
 
-    //priority of the incident
-    SpiraTeamPriority[] priorities;
-    if(projectId != -1) {
-      priorities = SpiraTeamUtil.getRequirementPriorities();
-    }
-    else {
-      priorities = new SpiraTeamPriority[1];
-      priorities[0] = new SpiraTeamPriority(-1, "Please select a project");
-    }
-    priority = new ComboBox<>(priorities);
-    priority.setAlignmentX(0);
-    JBLabel priorityLabel = new JBLabel("Priority: ");
-    priorityLabel.setAlignmentX(0);
-    panel.add(priorityLabel);
+      //field for the type ID
+      artifactType = new ComboBox<>(requirementTypesArr);
+      artifactType.setAlignmentX(0);
+      JBLabel requirementTypeLabel = new JBLabel("Type: ");
+      requirementTypeLabel.setAlignmentX(0);
+      panel.add(requirementTypeLabel);
 
-    //get the active users in the current project
-    SpiraTeamUser[] users;
-    if(projectId != -1) {
-      users = SpiraTeamUtil.getProjectUsers(credentials, projectId);
-    }
-    else {
-      users = new SpiraTeamUser[1];
-      users[0] = new SpiraTeamUser("Please select a project",-1, "");
-    }
-    owner = new ComboBox<>(users);
-    owner.setAlignmentX(0);
-    //set the default selected user to the one currently signed in
-    for (int i = 0; i < users.length; i++) {
-      //if we find the user, set the default index to that user
-      if (users[i].getUsername().equals(credentials.getUsername())) {
-        owner.setSelectedIndex(i);
-        break;
+      //priority of the incident
+      SpiraTeamPriority[] priorities;
+      if (projectId != -1) {
+        priorities = SpiraTeamUtil.getRequirementPriorities();
       }
+      else {
+        priorities = new SpiraTeamPriority[1];
+        priorities[0] = new SpiraTeamPriority(-1, "Please select a project");
+      }
+      priority = new ComboBox<>(priorities);
+      priority.setAlignmentX(0);
+      JBLabel priorityLabel = new JBLabel("Priority: ");
+      priorityLabel.setAlignmentX(0);
+      panel.add(priorityLabel);
+
+      //get the active users in the current project
+      SpiraTeamUser[] users;
+      if (projectId != -1) {
+        users = SpiraTeamUtil.getProjectUsers(credentials, projectId);
+      }
+      else {
+        users = new SpiraTeamUser[1];
+        users[0] = new SpiraTeamUser("Please select a project", -1, "");
+      }
+      owner = new ComboBox<>(users);
+      owner.setAlignmentX(0);
+      //set the default selected user to the one currently signed in
+      for (int i = 0; i < users.length; i++) {
+        //if we find the user, set the default index to that user
+        if (users[i].getUsername().equals(credentials.getUsername())) {
+          owner.setSelectedIndex(i);
+          break;
+        }
+      }
+      JBLabel ownerLabel = new JBLabel("Owner: ");
+      ownerLabel.setAlignmentX(0);
+      panel.add(ownerLabel);
+
+      panel.add(artifactType);
+      panel.add(priority);
+      panel.add(owner);
+      add(panel);
     }
-    JBLabel ownerLabel = new JBLabel("Owner: ");
-    ownerLabel.setAlignmentX(0);
-    panel.add(ownerLabel);
-
-    panel.add(artifactType);
-    panel.add(priority);
-    panel.add(owner);
-
-    add(panel);
+    //if the user cannot create a requirement
+    else {
+      //remove the name and description fields
+      removeAll();
+      JBLabel label = new JBLabel("You cannot create requirements in this project");
+      //add the label to the panel
+      add(label);
+    }
   }
 
   public NewRequirementPanel(SpiraTeamCredentials credentials, int projectId) {

@@ -51,56 +51,67 @@ public class NewIncidentPanel extends NewArtifactPanel {
       incidentTypesArr = new SpiraTeamArtifactType[1];
       incidentTypesArr[0] = new SpiraTeamArtifactType(-1, "Please select a project");
     }
-    artifactType = new ComboBox<>(incidentTypesArr);
-    artifactType.setAlignmentX(0);
-    JBLabel incidentTypeLabel = new JBLabel("Type: ");
-    incidentTypeLabel.setAlignmentX(0);
-    panel.add(incidentTypeLabel);
+
+    //only add stuff if the user has access to incident types
+    if(incidentTypesArr != null && incidentTypesArr.length > 0) {
+      artifactType = new ComboBox<>(incidentTypesArr);
+      artifactType.setAlignmentX(0);
+      JBLabel incidentTypeLabel = new JBLabel("Type: ");
+      incidentTypeLabel.setAlignmentX(0);
+      panel.add(incidentTypeLabel);
 
 
-    //priority of the incident
-    SpiraTeamPriority[] priorities;
-    if(projectId != -1) {
-      priorities = SpiraTeamUtil.getProjectIncidentPriorities(credentials, projectId);
-    }
-    else {
-      priorities = new SpiraTeamPriority[1];
-      priorities[0] = new SpiraTeamPriority(-1, "Please select a project");
-    }
-    priority = new ComboBox<>(priorities);
-    priority.setAlignmentX(0);
-    JBLabel priorityLabel = new JBLabel("Priority: ");
-    priorityLabel.setAlignmentX(0);
-    panel.add(priorityLabel);
-
-    //get the active users in the current project
-    SpiraTeamUser[] users;
-    if(projectId != -1) {
-      users = SpiraTeamUtil.getProjectUsers(credentials, projectId);
-    }
-    else {
-      users = new SpiraTeamUser[1];
-      users[0] = new SpiraTeamUser("Please select a project", -1, "");
-    }
-    owner = new ComboBox<>(users);
-    owner.setAlignmentX(0);
-    //set the default selected user to the one currently signed in
-    for (int i = 0; i < users.length; i++) {
-      //if we find the user, set the default index to that user
-      if (users[i].getUsername().equals(credentials.getUsername())) {
-        owner.setSelectedIndex(i);
-        break;
+      //priority of the incident
+      SpiraTeamPriority[] priorities;
+      if (projectId != -1) {
+        priorities = SpiraTeamUtil.getProjectIncidentPriorities(credentials, projectId);
       }
+      else {
+        priorities = new SpiraTeamPriority[1];
+        priorities[0] = new SpiraTeamPriority(-1, "Please select a project");
+      }
+      priority = new ComboBox<>(priorities);
+      priority.setAlignmentX(0);
+      JBLabel priorityLabel = new JBLabel("Priority: ");
+      priorityLabel.setAlignmentX(0);
+      panel.add(priorityLabel);
+
+      //get the active users in the current project
+      SpiraTeamUser[] users;
+      if (projectId != -1) {
+        users = SpiraTeamUtil.getProjectUsers(credentials, projectId);
+      }
+      else {
+        users = new SpiraTeamUser[1];
+        users[0] = new SpiraTeamUser("Please select a project", -1, "");
+      }
+      owner = new ComboBox<>(users);
+      owner.setAlignmentX(0);
+      //set the default selected user to the one currently signed in
+      for (int i = 0; i < users.length; i++) {
+        //if we find the user, set the default index to that user
+        if (users[i].getUsername().equals(credentials.getUsername())) {
+          owner.setSelectedIndex(i);
+          break;
+        }
+      }
+      JBLabel ownerLabel = new JBLabel("Owner: ");
+      ownerLabel.setAlignmentX(0);
+      panel.add(ownerLabel);
+
+      panel.add(artifactType);
+      panel.add(priority);
+      panel.add(owner);
+
+      add(panel);
     }
-    JBLabel ownerLabel = new JBLabel("Owner: ");
-    ownerLabel.setAlignmentX(0);
-    panel.add(ownerLabel);
-
-    panel.add(artifactType);
-    panel.add(priority);
-    panel.add(owner);
-
-    add(panel);
+    //if the user cannot create incidents
+    else {
+      //remove all fields from the superclass
+      removeAll();
+      JBLabel label = new JBLabel("You cannot create incidents in this project");
+      add(label);
+    }
   }
 
   public NewIncidentPanel(SpiraTeamCredentials credentials, int projectId) {

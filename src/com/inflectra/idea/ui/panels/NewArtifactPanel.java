@@ -42,7 +42,7 @@ public abstract class NewArtifactPanel extends JBPanel {
   protected JBTextField nameField;
   protected ComboBox<SpiraTeamUser> owner;
   protected ComboBox<SpiraTeamPriority> priority;
-  protected JTextArea description;
+  protected JTextArea descriptionArea;
   protected int projectId;
 
   public NewArtifactPanel(SpiraTeamCredentials credentials, int projectId, String name, String description) {
@@ -80,10 +80,10 @@ public abstract class NewArtifactPanel extends JBPanel {
     JBLabel descriptionLabel = new JBLabel("Description: ");
     descriptionLabel.setAlignmentX(0);
     add(descriptionLabel);
-    description = new JTextArea(d);
-    description.setAlignmentX(0);
-    description.setLineWrap(true);
-    add(description);
+    descriptionArea = new JTextArea(d);
+    descriptionArea.setAlignmentX(0);
+    descriptionArea.setLineWrap(true);
+    add(descriptionArea);
     add(Box.createRigidArea(new Dimension(0,10)));
   }
 
@@ -121,8 +121,8 @@ public abstract class NewArtifactPanel extends JBPanel {
    * @return The description the user has entered
    */
   public String getDescription() {
-    if(description != null)
-      return description.getText();
+    if(descriptionArea != null)
+      return descriptionArea.getText();
     return "";
   }
 

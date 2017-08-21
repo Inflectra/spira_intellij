@@ -16,6 +16,7 @@
 package com.inflectra.idea.core;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.stream.JsonReader;
 import com.inflectra.idea.core.model.SpiraTeamArtifactType;
@@ -231,7 +232,8 @@ public class SpiraTeamUtil {
       SpiraTeamUser[] out = new SpiraTeamUser[jsonList.size() + 1];
       //empty option will be second
       out[1] = new SpiraTeamUser("-- None --", -1, "");
-
+      //used to create the array with the current user first
+      int add = 2;
       for(int i=0; i<jsonList.size(); i++) {
         LinkedTreeMap map = jsonList.get(i);
         //get the properties
@@ -244,10 +246,11 @@ public class SpiraTeamUtil {
         if(username.equals(credentials.getUsername())) {
           //current user in the first index of the array
           out[0] = user;
+          add = 1;
         }
         else {
           //add the new user to the array
-          out[i + 2] = user;
+          out[i + add] = user;
         }
       }
       return out;
@@ -349,6 +352,9 @@ public class SpiraTeamUtil {
       e.printStackTrace();
       //should never happen
     }
+    catch(JsonSyntaxException e) {
+      return new SpiraTeamArtifactType[0];
+    }
     return new SpiraTeamArtifactType[0];
   }
 
@@ -379,6 +385,9 @@ public class SpiraTeamUtil {
     catch(IOException e) {
       e.printStackTrace();
       //should never happen
+    }
+    catch(JsonSyntaxException e) {
+      return new SpiraTeamArtifactType[0];
     }
     return new SpiraTeamArtifactType[0];
   }
@@ -411,6 +420,9 @@ public class SpiraTeamUtil {
       e.printStackTrace();
       //should never happen
     }
+    catch(JsonSyntaxException e) {
+      return new SpiraTeamArtifactType[0];
+    }
     return new SpiraTeamArtifactType[0];
   }
 
@@ -424,8 +436,16 @@ public class SpiraTeamUtil {
     try {
       String url = credentials.getUrl() + restServiceUrl + "projects/" + projectId +
       "/requirements?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
-      //post the new requirement
-      httpPost(url, body);
+      //post the new requirement, and store the result
+      InputStream inputStream = httpPost(url, body);
+      //enable reading of the input stream
+      BufferedReader stream = new BufferedReader(new InputStreamReader(inputStream));
+      //create the gson object
+      Gson gson = new Gson();
+      LinkedTreeMap jsonMap = gson.fromJson(stream, LinkedTreeMap.class);
+      if(jsonMap.containsKey("Message")) {
+        System.out.println("Invalid action");
+      }
     }
     catch(IOException e) {
       e.printStackTrace();

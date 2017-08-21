@@ -65,6 +65,10 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    */
   private JBLabel selectedLabel;
   /**
+   * The tool window which contains the information
+   */
+  private ToolWindow window;
+  /**
    * The current instance of SpiraToolWindowFactory
    */
   private static SpiraToolWindowFactory instance;
@@ -87,7 +91,18 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   public static void reload(Project project) {
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     try {
+      //clear the top panel
       instance.topPanel.removeAll();
+      //label which informs the user that refreshing is done
+      JBLabel refreshLabel = new JBLabel("Refreshed!");
+      //create a new font with a size of 20
+      Font newFont = refreshLabel.getFont().deriveFont((float)20);
+      refreshLabel.setFont(newFont);
+
+      //add the label but make it invisible at first
+      refreshLabel.setVisible(false);
+      instance.topPanel.add(refreshLabel);
+
       instance.showTopInformation(project, credentials);
       //show the username of the authenticated user
       instance.addRequirements(credentials);
@@ -95,6 +110,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       instance.addTasks(credentials);
       //add incidents to the top panel
       instance.addIncidents(credentials);
+      //make the label visible at the top
+      refreshLabel.setVisible(true);
     }
     catch(IOException e) {
       instance.showInvalidInformation(project);
@@ -228,20 +245,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     JButton refresh = new JButton("Refresh");
     //on button clicked
     refresh.addActionListener(l -> {
-      topPanel.removeAll();
-      bottomPanel.removeAll();
-      try {
-        //show the username of the authenticated user
-        showTopInformation(project, credentials);
-        addRequirements(credentials);
-        //add tasks to the top panel
-        addTasks(credentials);
-        //add incidents to the top panel
-        addIncidents(credentials);
-      }
-      catch(IOException e) {
-        showInvalidInformation(project);
-      }
+      //reload the tool window
+      reload(project);
     });
     panel.add(refresh);
     JButton home = new JButton("Home");
@@ -273,6 +278,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow window) {
     //get the credentials from the IDE
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
+    //store the tool window for future use
+    this.window = window;
     try {
       if(credentials != null) {
         showTopInformation(project, credentials);
