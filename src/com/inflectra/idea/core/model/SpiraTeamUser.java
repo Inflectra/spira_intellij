@@ -23,12 +23,21 @@ public class SpiraTeamUser {
   private String fullName;
   private int userId;
   private String username;
-  public SpiraTeamUser(String fullName, int userId, String username) {
+  private int roleId;
+
+  public SpiraTeamUser(String fullName, int userId, String username, int roleId) {
     this.fullName = fullName;
     this.userId = userId;
     this.username = username;
+    this.roleId = roleId;
   }
 
+  public void setRoleId(int r) {
+    roleId = r;
+  }
+  public int getRoleId() {
+    return roleId;
+  }
   /**
    * @return The full name of the user
    */

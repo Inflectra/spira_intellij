@@ -16,6 +16,7 @@
 package com.inflectra.idea.ui.dialogs;
 
 import com.inflectra.idea.core.SpiraTeamCredentials;
+import com.inflectra.idea.core.model.artifacts.ArtifactType;
 import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -103,6 +104,12 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
    */
   @Override
   protected void doOKAction() {
+    //if the new username is different from the old one
+    if(credentials.getUsername() != null && !(credentials.getUsername().equals(url.getText()))) {
+      //reset the last created project and artifact type
+      this.credentials.setLastCreatedProjectId(-1);
+      this.credentials.setLastOpenArtifactType(ArtifactType.PLACERHOLDER);
+    }
     //need to store the new credentials
     this.credentials.setUrl(url.getText());
     this.credentials.setUsername(username.getText());

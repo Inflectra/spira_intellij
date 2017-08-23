@@ -22,6 +22,10 @@ package com.inflectra.idea.core.model;
 public class SpiraTeamProject {
   private String projectName;
   private int projectId;
+  /**
+   * The role of the user logged-in
+   */
+  private SpiraTeamProjectRole userRole;
 
   public SpiraTeamProject(String projectName, int projectId) {
     this.projectName = projectName;
@@ -34,6 +38,14 @@ public class SpiraTeamProject {
 
   public int getProjectId() {
     return projectId;
+  }
+
+  public void setUserRole(SpiraTeamProjectRole role) {
+    userRole = role;
+  }
+
+  public SpiraTeamProjectRole getUserRole() {
+    return userRole;
   }
 
   @Override

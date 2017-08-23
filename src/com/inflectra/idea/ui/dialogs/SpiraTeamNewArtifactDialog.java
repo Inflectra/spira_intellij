@@ -18,6 +18,7 @@ package com.inflectra.idea.ui.dialogs;
 import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
 import com.inflectra.idea.core.model.SpiraTeamProject;
+import com.inflectra.idea.core.model.SpiraTeamProjectRole;
 import com.inflectra.idea.core.model.artifacts.ArtifactType;
 import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.inflectra.idea.ui.panels.NewArtifactPanel;
@@ -50,9 +51,9 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
 
 
   /**
-   * The ID of the project currently selected by the user
+   * The project currently selected by the user. Has Id for compatibility
    */
-  private int projectId;
+  private SpiraTeamProject projectId;
 
   /**
    * Stores the information about the currently selected artifact type
@@ -73,7 +74,6 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     this.credentials = credentials;
     this.setResizable(false);
     this.project = project;
-    this.projectId = credentials.getLastCreatedProjectId();
     init();
     setTitle("New Artifact");
   }
@@ -112,10 +112,23 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
       //if the current project matches that of the one created in before, store it
       if(availableProjectsList.get(i).getProjectId() == credentials.getLastCreatedProjectId()) {
         lastCreatedProjectIndex = i + 1;
+        //store the project
+        projectId = availableProjectsList.get(i);
       }
     }
-    //set the projectId to the default selected project
-    projectId = availableProjectsArray[0].getProjectId();
+
+    if(projectId == null) {
+      SpiraTeamProject newProject = new SpiraTeamProject("-- Select Project --", -1);
+      //create a new role and give it access to everything
+      SpiraTeamProjectRole role = new SpiraTeamProjectRole();
+      role.setRoleId(-1);
+      role.setCanCreateTask(true);
+      role.setCanCreateIncident(true);
+      role.setCanCreateRequirement(true);
+      newProject.setUserRole(role);
+
+      projectId = newProject;
+    }
     //create the combo box
     projects = new ComboBox<>(availableProjectsArray);
     projects.setAlignmentX(0);
@@ -124,7 +137,18 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     //listener called every time a new option is selected
     projects.addActionListener(l -> {
       SpiraTeamProject selectedItem = (SpiraTeamProject) projects.getSelectedItem();
-      projectId = selectedItem.getProjectId();
+      projectId = selectedItem;
+      ArtifactType lastSelected = (ArtifactType) typeSelection.getSelectedItem();
+      //clear the list, and refill it with valid information
+      typeSelection.removeAllItems();
+      for(ArtifactType type: selectedItem.getUserRole().getPossibleArtifactTypes()) {
+        typeSelection.addItem(type);
+      }
+      //only set default if the new box has the option
+      if(projectId.getUserRole().canCreate(lastSelected)) {
+        //default is the last created artifact type
+        typeSelection.setSelectedItem(credentials.getLastCreatedArtifactType());
+      }
       //need to refresh the options after another project is selected
       if(type == ArtifactType.REQUIREMENT) {
         addRequirement(fields);
@@ -141,11 +165,15 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     out.add(Box.createRigidArea(new Dimension(0,10)));
 
     //the types of artifacts
-    ArtifactType[] types = {ArtifactType.PLACERHOLDER, ArtifactType.REQUIREMENT, ArtifactType.TASK, ArtifactType.INCIDENT};
+    ArtifactType[] types = projectId.getUserRole().getPossibleArtifactTypes();
     typeSelection = new ComboBox<>(types);
     typeSelection.setAlignmentX(0);
-    //default is the last created artifact type
-    typeSelection.setSelectedItem(credentials.getLastCreatedArtifactType());
+    //only set default if you can create the artifact
+    if(projectId.getUserRole().canCreate(credentials.getLastCreatedArtifactType())) {
+      //default is the last created artifact type
+      typeSelection.setSelectedItem(credentials.getLastCreatedArtifactType());
+    }
+    type = (ArtifactType)typeSelection.getSelectedItem();
     //called every time an option is clicked
     typeSelection.addActionListener(l -> {
       type = (ArtifactType)typeSelection.getSelectedItem();
@@ -163,7 +191,14 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     //add the panel with data fields
     out.add(fields);
     //should show fields when the window opens
-    addRequirement(fields);
+    if(type == ArtifactType.REQUIREMENT)
+      addRequirement(fields);
+    else if(type == ArtifactType.INCIDENT)
+      addIncident(fields);
+    else if(type == ArtifactType.TASK)
+      addTask(fields);
+    else
+      addRequirement(fields);
 
     return out;
   }
@@ -177,7 +212,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     //if there is not already a requirement panel or another project has been selected, create one
     if(artifactPanel == null)
       artifactPanel = new NewRequirementPanel(credentials, projectId);
-    else if(artifactPanel.getProjectId() != projectId || artifactPanel.getArtifactType() != ArtifactType.REQUIREMENT){
+    else if(artifactPanel.getProjectId() != projectId.getProjectId() || artifactPanel.getArtifactType() != ArtifactType.REQUIREMENT){
       String name = artifactPanel.getArtifactName();
       String description = artifactPanel.getDescription();
       artifactPanel = new NewRequirementPanel(credentials, projectId, name, description);
@@ -196,7 +231,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     //if there is not already a task panel or another project has been selected, create one
     if(artifactPanel == null)
       artifactPanel = new NewTaskPanel(credentials, projectId);
-    else if(artifactPanel.getProjectId() != projectId || artifactPanel.getArtifactType() != ArtifactType.TASK){
+    else if(artifactPanel.getProjectId() != projectId.getProjectId() || artifactPanel.getArtifactType() != ArtifactType.TASK){
       String name = artifactPanel.getArtifactName();
       String description = artifactPanel.getDescription();
       artifactPanel = new NewTaskPanel(credentials, projectId, name, description);
@@ -215,7 +250,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     //if there is not already a task panel or another project has been selected, create one
     if(artifactPanel == null)
       artifactPanel = new NewIncidentPanel(credentials, projectId);
-    else if(artifactPanel.getProjectId() != projectId || artifactPanel.getArtifactType() != ArtifactType.INCIDENT){
+    else if(artifactPanel.getProjectId() != projectId.getProjectId() || artifactPanel.getArtifactType() != ArtifactType.INCIDENT){
       String name = artifactPanel.getArtifactName();
       String description = artifactPanel.getDescription();
       artifactPanel = new NewIncidentPanel(credentials, projectId, name, description);
@@ -230,7 +265,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
    */
   @Override
   protected ValidationInfo doValidate() {
-    if(projectId == -1) {
+    if(projectId.getProjectId() == -1) {
       return new ValidationInfo("You must choose a project", projects);
     }
     else if(type == ArtifactType.PLACERHOLDER) {
@@ -245,7 +280,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
   @Override
   protected void doOKAction() {
     //store the projectId for future use
-    credentials.setLastCreatedProjectId(projectId);
+    credentials.setLastCreatedProjectId(projectId.getProjectId());
     if(type == ArtifactType.REQUIREMENT) {
       credentials.setLastCreatedArtifactType(ArtifactType.REQUIREMENT);
       NewRequirementPanel requirementPanel = (NewRequirementPanel) artifactPanel;
@@ -266,7 +301,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
 
       body += "}";
       //create the requirement in the system
-      SpiraTeamUtil.createRequirement(credentials, body, projectId);
+      SpiraTeamUtil.createRequirement(credentials, body, projectId.getProjectId());
     }
     else if(type == ArtifactType.TASK) {
       credentials.setLastCreatedArtifactType(ArtifactType.TASK);
@@ -290,7 +325,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
       //TODO: Add support for different task status ID's
       body += "}";
       //create the task in the system
-      SpiraTeamUtil.createTask(credentials, body, projectId);
+      SpiraTeamUtil.createTask(credentials, body, projectId.getProjectId());
     }
     else if(type == ArtifactType.INCIDENT) {
       credentials.setLastCreatedArtifactType(ArtifactType.INCIDENT);
@@ -311,7 +346,7 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
       }
       body+="}";
       //create the incident in the system
-      SpiraTeamUtil.createIncident(credentials, body, projectId);
+      SpiraTeamUtil.createIncident(credentials, body, projectId.getProjectId());
     }
     super.doOKAction();
     //refresh the window

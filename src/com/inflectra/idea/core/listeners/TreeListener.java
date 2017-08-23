@@ -15,6 +15,7 @@
  */
 package com.inflectra.idea.core.listeners;
 
+import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.util.ui.UIUtil;
@@ -56,6 +57,8 @@ public class TreeListener implements MouseListener {
    */
   @Override
   public void mouseClicked(MouseEvent e) {
+    //hide the refresh label
+    SpiraToolWindowFactory.hideRefreshLabel();
     //hide the list if it is already expanded
     if (isExpanded) {
       //hide the artifacts

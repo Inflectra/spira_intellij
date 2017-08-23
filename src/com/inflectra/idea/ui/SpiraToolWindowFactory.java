@@ -73,6 +73,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    */
   private static SpiraToolWindowFactory instance;
 
+  private JBLabel refreshLabel;
+
   public SpiraToolWindowFactory() {
     instance = this;
     topPanel = new JBPanel();
@@ -84,6 +86,13 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     bottomPanel.setBorder(new EmptyBorder(5,10,5,10));
     //make the panel lay out its children vertically, instead of horizontally
     bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+
+    refreshLabel = new JBLabel("Refreshed!");
+    //hide by default
+    refreshLabel.setVisible(false);
+    //create a new font with a size of 20
+    Font newFont = instance.refreshLabel.getFont().deriveFont((float)20);
+    instance.refreshLabel.setFont(newFont);
   }
   /**
    * Reloads the contents of the SpiraTeam Window
@@ -93,15 +102,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     try {
       //clear the top panel
       instance.topPanel.removeAll();
-      //label which informs the user that refreshing is done
-      JBLabel refreshLabel = new JBLabel("Refreshed!");
-      //create a new font with a size of 20
-      Font newFont = refreshLabel.getFont().deriveFont((float)20);
-      refreshLabel.setFont(newFont);
-
-      //add the label but make it invisible at first
-      refreshLabel.setVisible(false);
-      instance.topPanel.add(refreshLabel);
 
       instance.showTopInformation(project, credentials);
       //show the username of the authenticated user
@@ -111,11 +111,18 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       //add incidents to the top panel
       instance.addIncidents(credentials);
       //make the label visible at the top
-      refreshLabel.setVisible(true);
+      instance.refreshLabel.setVisible(true);
     }
     catch(IOException e) {
       instance.showInvalidInformation(project);
     }
+  }
+
+  /**
+   * Hides the refresh label
+   */
+  public static void hideRefreshLabel() {
+    instance.refreshLabel.setVisible(false);
   }
 
   /**

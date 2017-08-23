@@ -19,6 +19,7 @@ import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
 import com.inflectra.idea.core.model.SpiraTeamArtifactType;
 import com.inflectra.idea.core.model.SpiraTeamPriority;
+import com.inflectra.idea.core.model.SpiraTeamProject;
 import com.inflectra.idea.core.model.SpiraTeamUser;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
@@ -34,8 +35,8 @@ import java.awt.*;
 public class NewRequirementPanel extends NewArtifactPanel {
   SpiraTeamCredentials credentials;
 
-  public NewRequirementPanel(SpiraTeamCredentials credentials, int projectId, String name, String description) {
-    super(credentials, projectId, name, description);
+  public NewRequirementPanel(SpiraTeamCredentials credentials, SpiraTeamProject project, String name, String description) {
+    super(credentials, project.getProjectId(), name, description);
     this.credentials = credentials;
 
     //panel which allows type and priority to be side-by-side
@@ -55,7 +56,7 @@ public class NewRequirementPanel extends NewArtifactPanel {
       requirementTypesArr[0] = new SpiraTeamArtifactType(-1, "Please select a project");
     }
     //only add properties if the user has access to types
-    if(requirementTypesArr != null && requirementTypesArr.length > 0) {
+    if(requirementTypesArr != null && requirementTypesArr.length > 0 && project.getUserRole().canCreateRequirement()) {
 
       //field for the type ID
       artifactType = new ComboBox<>(requirementTypesArr);
@@ -86,7 +87,7 @@ public class NewRequirementPanel extends NewArtifactPanel {
       }
       else {
         users = new SpiraTeamUser[1];
-        users[0] = new SpiraTeamUser("Please select a project", -1, "");
+        users[0] = new SpiraTeamUser("Please select a project", -1, "", -1);
       }
       owner = new ComboBox<>(users);
       owner.setAlignmentX(0);
@@ -117,8 +118,8 @@ public class NewRequirementPanel extends NewArtifactPanel {
     }
   }
 
-  public NewRequirementPanel(SpiraTeamCredentials credentials, int projectId) {
-    this(credentials, projectId, "", "");
+  public NewRequirementPanel(SpiraTeamCredentials credentials, SpiraTeamProject project) {
+    this(credentials, project, "", "");
   }
 
 }

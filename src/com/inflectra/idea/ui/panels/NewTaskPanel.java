@@ -19,6 +19,7 @@ import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
 import com.inflectra.idea.core.model.SpiraTeamArtifactType;
 import com.inflectra.idea.core.model.SpiraTeamPriority;
+import com.inflectra.idea.core.model.SpiraTeamProject;
 import com.inflectra.idea.core.model.SpiraTeamUser;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
@@ -33,8 +34,8 @@ import java.awt.*;
  */
 public class NewTaskPanel extends NewArtifactPanel {
   SpiraTeamCredentials credentials;
-  public NewTaskPanel(SpiraTeamCredentials credentials, int projectId, String name, String description) {
-    super(credentials, projectId, name, description);
+  public NewTaskPanel(SpiraTeamCredentials credentials, SpiraTeamProject project, String name, String description) {
+    super(credentials, project.getProjectId(), name, description);
     this.credentials = credentials;
 
     //panel which allows type and priority to be side-by-side
@@ -44,7 +45,7 @@ public class NewTaskPanel extends NewArtifactPanel {
     LayoutManager layout = new GridLayout(2,3);
     panel.setLayout(layout);
 
-    //only add stuff if the projectId is valid
+    //only add stuff if the projectId is valid and the user can create tasks
     //the types of tasks in the given project
     SpiraTeamArtifactType[] taskTypesArr;
     if(projectId != -1) {
@@ -55,7 +56,7 @@ public class NewTaskPanel extends NewArtifactPanel {
       taskTypesArr[0] = new SpiraTeamArtifactType(-1, "Please select a project");
     }
     //only add stuff if the user has access to task types
-    if(taskTypesArr != null && taskTypesArr.length > 0) {
+    if(taskTypesArr != null && taskTypesArr.length > 0 && project.getUserRole().canCreateTask()) {
 
       artifactType = new ComboBox<>(taskTypesArr);
       artifactType.setAlignmentX(0);
@@ -85,7 +86,7 @@ public class NewTaskPanel extends NewArtifactPanel {
       }
       else {
         users = new SpiraTeamUser[1];
-        users[0] = new SpiraTeamUser("Please select a project", -1, "");
+        users[0] = new SpiraTeamUser("Please select a project", -1, "", -1);
       }
       owner = new ComboBox<>(users);
       owner.setAlignmentX(0);
@@ -116,8 +117,8 @@ public class NewTaskPanel extends NewArtifactPanel {
     }
   }
 
-  public NewTaskPanel(SpiraTeamCredentials credentials, int projectId) {
-    this(credentials, projectId, "", "");
+  public NewTaskPanel(SpiraTeamCredentials credentials, SpiraTeamProject project) {
+    this(credentials, project, "", "");
   }
 
 }

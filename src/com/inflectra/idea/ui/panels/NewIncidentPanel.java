@@ -19,6 +19,7 @@ import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
 import com.inflectra.idea.core.model.SpiraTeamArtifactType;
 import com.inflectra.idea.core.model.SpiraTeamPriority;
+import com.inflectra.idea.core.model.SpiraTeamProject;
 import com.inflectra.idea.core.model.SpiraTeamUser;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
@@ -33,8 +34,8 @@ import java.awt.*;
  */
 public class NewIncidentPanel extends NewArtifactPanel {
 
-  public NewIncidentPanel(SpiraTeamCredentials credentials, int projectId, String name, String description) {
-    super(credentials, projectId, name, description);
+  public NewIncidentPanel(SpiraTeamCredentials credentials, SpiraTeamProject project, String name, String description) {
+    super(credentials, project.getProjectId(), name, description);
     //panel which allows type and priority to be side-by-side
     JBPanel panel = new JBPanel();
     panel.setAlignmentX(0);
@@ -53,7 +54,7 @@ public class NewIncidentPanel extends NewArtifactPanel {
     }
 
     //only add stuff if the user has access to incident types
-    if(incidentTypesArr != null && incidentTypesArr.length > 0) {
+    if(incidentTypesArr != null && incidentTypesArr.length > 0 && project.getUserRole().canCreateIncident()) {
       artifactType = new ComboBox<>(incidentTypesArr);
       artifactType.setAlignmentX(0);
       JBLabel incidentTypeLabel = new JBLabel("Type: ");
@@ -83,7 +84,7 @@ public class NewIncidentPanel extends NewArtifactPanel {
       }
       else {
         users = new SpiraTeamUser[1];
-        users[0] = new SpiraTeamUser("Please select a project", -1, "");
+        users[0] = new SpiraTeamUser("Please select a project", -1, "", -1);
       }
       owner = new ComboBox<>(users);
       owner.setAlignmentX(0);
@@ -114,8 +115,8 @@ public class NewIncidentPanel extends NewArtifactPanel {
     }
   }
 
-  public NewIncidentPanel(SpiraTeamCredentials credentials, int projectId) {
-    this(credentials, projectId, "", "");
+  public NewIncidentPanel(SpiraTeamCredentials credentials, SpiraTeamProject project) {
+    this(credentials, project, "", "");
   }
 
 

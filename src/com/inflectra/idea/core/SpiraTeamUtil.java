@@ -19,10 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.stream.JsonReader;
-import com.inflectra.idea.core.model.SpiraTeamArtifactType;
-import com.inflectra.idea.core.model.SpiraTeamPriority;
-import com.inflectra.idea.core.model.SpiraTeamProject;
-import com.inflectra.idea.core.model.SpiraTeamUser;
+import com.inflectra.idea.core.model.*;
 import com.inflectra.idea.core.model.artifacts.Artifact;
 import com.inflectra.idea.core.model.artifacts.ArtifactType;
 
@@ -176,8 +173,8 @@ public class SpiraTeamUtil {
 
   /**
    * @param credentials The credentials
-   * @return A list of all the projectIds available to the current user
-   * @throws IOException If the URL is invalid
+   * @return A list of all the projects available to the current user
+   * @throws IOException If the credentials are invalid
    */
   public static List<SpiraTeamProject> getAvailableProjects(SpiraTeamCredentials credentials) {
     try {
@@ -199,12 +196,111 @@ public class SpiraTeamUtil {
         Double projectId = (Double)map.get("ProjectId");
         //retrieve the project Name
         String projectName = (String)map.get("Name");
-        //add the project to the output list
-        out.add(new SpiraTeamProject(projectName, projectId.intValue()));
+
+        //the project to add
+        SpiraTeamProject project = new SpiraTeamProject(projectName, projectId.intValue());
+        //get the users in the current project
+        SpiraTeamUser[] projectUsers = getProjectUsers(credentials, project.getProjectId());
+        //look for the current user
+        for(SpiraTeamUser user: projectUsers) {
+          if(user.getUsername().equals(credentials.getUsername())) {
+            //the user is part of the project
+            SpiraTeamProjectRole[] projectRoles = getProjectRoles(credentials);
+            for(SpiraTeamProjectRole role: projectRoles) {
+              //they have the same role
+              if(role.getRoleId() == user.getRoleId()) {
+                //set the role in the project
+                project.setUserRole(role);
+                //break out looking through roles
+                break;
+              }
+            }
+            //only add project if user is within it
+            out.add(project);
+            //break out of looking through the users
+            break;
+          }
+        }
+
       }
       return out;
     }
     catch(Exception e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  /**
+   * Returns an array of the project roles in the system
+   * @param credentials
+   * @return
+   */
+  public static SpiraTeamProjectRole[] getProjectRoles(SpiraTeamCredentials credentials) {
+    try {
+      String url = credentials.getUrl() + restServiceUrl + "projects-roles?username=" + credentials.getUsername() +
+      "&api-key=" + credentials.getToken();
+      //perform the REST request
+      InputStream inputStream = httpGet(url);
+      Gson gson = new Gson();
+      JsonReader reader = new JsonReader(new BufferedReader(new InputStreamReader(inputStream)));
+      //turn json into a list
+      ArrayList<LinkedTreeMap> jsonList = gson.fromJson(reader, ArrayList.class);
+      //the list we will return
+      SpiraTeamProjectRole[] out = new SpiraTeamProjectRole[jsonList.size()];
+
+      //loop through each map
+      for(int i=0; i<jsonList.size(); i++) {
+        LinkedTreeMap role = jsonList.get(i);
+        //get the permissions
+        List<LinkedTreeMap> permissions = (ArrayList) role.get("Permissions");
+
+        SpiraTeamProjectRole projectRole = new SpiraTeamProjectRole();
+        //used to tell if the projectRole has had its id set
+        boolean hasGottenRoleId = false;
+        //loop through every permission
+        for(LinkedTreeMap permission: permissions) {
+          int artifactId = ((Double)permission.get("ArtifactTypeId")).intValue();
+          //set the role id
+          if(!hasGottenRoleId) {
+            hasGottenRoleId = true;
+            int roleId = ((Double)permission.get("ProjectRoleId")).intValue();
+            projectRole.setRoleId(roleId);
+          }
+          //it is a requirement
+          if(artifactId == 1) {
+            int permissionId = ((Double)permission.get("PermissionId")).intValue();
+            //the user can create requirements
+            if(permissionId == 1) {
+              projectRole.setCanCreateRequirement(true);
+            }
+          }
+
+          //it is an incident
+          else if(artifactId == 3) {
+            int permissionId = ((Double)permission.get("PermissionId")).intValue();
+            //the user can create incidents
+            if(permissionId == 1) {
+              projectRole.setCanCreateIncident(true);
+            }
+          }
+
+          //it is a task
+          else if(artifactId == 6) {
+            int permissionId = ((Double)permission.get("PermissionId")).intValue();
+            //the user can create tasks
+            if(permissionId == 1) {
+              projectRole.setCanCreateTask(true);
+            }
+          }
+        }
+        //add to the array
+        out[i] = projectRole;
+      }
+      return out;
+    }
+    catch(IOException e) {
+      //should never happen
       e.printStackTrace();
     }
     return null;
@@ -231,17 +327,19 @@ public class SpiraTeamUtil {
       //the array we will return. It is one larger as the above list to account for the empty option
       SpiraTeamUser[] out = new SpiraTeamUser[jsonList.size() + 1];
       //empty option will be second
-      out[1] = new SpiraTeamUser("-- None --", -1, "");
+      out[1] = new SpiraTeamUser("-- None --", -1, "", -1);
       //used to create the array with the current user first
       int add = 2;
+      //loop through every item in the json list
       for(int i=0; i<jsonList.size(); i++) {
         LinkedTreeMap map = jsonList.get(i);
         //get the properties
         String fullName = (String)map.get("FullName");
         int userId = ((Double)map.get("UserId")).intValue();
         String username = (String)map.get("UserName");
+        int roleId = ((Double)map.get("ProjectRoleId")).intValue();
         //create the user
-        SpiraTeamUser user = new SpiraTeamUser(fullName, userId, username);
+        SpiraTeamUser user = new SpiraTeamUser(fullName, userId, username, roleId);
         //if the user matches the logged-in user, store it in the first index of the array
         if(username.equals(credentials.getUsername())) {
           //current user in the first index of the array
@@ -250,7 +348,11 @@ public class SpiraTeamUtil {
         }
         else {
           //add the new user to the array
-          out[i + add] = user;
+          if(i + add >= out.length) {
+            out[i] = user;
+          }
+          else
+            out[i + add] = user;
         }
       }
       return out;
