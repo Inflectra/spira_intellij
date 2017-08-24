@@ -20,10 +20,7 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.stream.JsonReader;
 import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
-import com.inflectra.idea.core.listeners.HyperlinkListener;
-import com.inflectra.idea.core.listeners.TopLabelMouseListener;
-import com.inflectra.idea.core.listeners.TreeListener;
-import com.inflectra.idea.core.listeners.UsernameListener;
+import com.inflectra.idea.core.listeners.*;
 import com.inflectra.idea.core.model.artifacts.*;
 import com.inflectra.idea.ui.dialogs.SpiraTeamLoginDialog;
 import com.inflectra.idea.ui.dialogs.SpiraTeamNewArtifactDialog;
@@ -36,15 +33,17 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.UIUtil;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URI;
-import java.util.ArrayList;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -69,11 +68,35 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    */
   private ToolWindow window;
   /**
+   * Click on button to refresh the window
+   */
+  private JButton refresh;
+  /**
+   * Panel with information on the signed in user and a refresh button
+   */
+  private JBPanel topInformationPanel;
+  //panel for each requirement type
+  private JBPanel requirements;
+  private JBPanel tasks;
+  private JBPanel incidents;
+  /**
+   * Contains the last time the window was refreshed
+   */
+  private JBLabel dateRefreshed;
+  /**
+   * The current date and time
+   */
+  private Date date;
+  /**
+   * The format to display the date in
+   */
+  private DateFormat dateFormat;
+
+  private JBPanel invalidInformationPanel;
+  /**
    * The current instance of SpiraToolWindowFactory
    */
   private static SpiraToolWindowFactory instance;
-
-  private JBLabel refreshLabel;
 
   public SpiraToolWindowFactory() {
     instance = this;
@@ -81,49 +104,80 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     topPanel.setBorder(new EmptyBorder(5, 10, 5, 10));
     //make the panel lay out its children vertically, instead of horizontally
     topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+    topPanel.setAlignmentX(0);
 
     bottomPanel = new JBPanel();
     bottomPanel.setBorder(new EmptyBorder(5,10,5,10));
     //make the panel lay out its children vertically, instead of horizontally
     bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
 
-    refreshLabel = new JBLabel("Refreshed!");
-    //hide by default
-    refreshLabel.setVisible(false);
-    //create a new font with a size of 20
-    Font newFont = instance.refreshLabel.getFont().deriveFont((float)20);
-    instance.refreshLabel.setFont(newFont);
   }
   /**
    * Reloads the contents of the SpiraTeam Window
    */
   public static void reload(Project project) {
-    SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
-    try {
-      //clear the top panel
-      instance.topPanel.removeAll();
+    //remove the panel which informs the user about invalid information
+    if(instance.invalidInformationPanel != null)
+      instance.invalidInformationPanel.setVisible(false);
 
-      instance.showTopInformation(project, credentials);
-      //show the username of the authenticated user
-      instance.addRequirements(credentials);
-      //add tasks to the top panel
-      instance.addTasks(credentials);
-      //add incidents to the top panel
-      instance.addIncidents(credentials);
-      //make the label visible at the top
-      instance.refreshLabel.setVisible(true);
-    }
-    catch(IOException e) {
-      instance.showInvalidInformation(project);
-    }
+    SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
+    //show the username of the authenticated user
+    instance.showTopInformation(project, credentials);
+    //need to remake the date
+    instance.date = new Date();
+    instance.dateRefreshed.setText("Last refreshed: " + instance.dateFormat.format(instance.date));
+    instance.refresh.setText("Refreshing...");
+    instance.topInformationPanel.updateUI();
+    //clearing the bottom panel, and updating it if the artifact is no longer assigned to the user
+    instance.bottomPanel.removeAll();
+    //these are required because of how swing works
+    instance.bottomPanel.updateUI();
+    instance.refresh.updateUI();
+
+    //refresh the options
+    SwingUtilities.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          instance.addRequirements(credentials);
+          //add tasks to the top panel
+          instance.addTasks(credentials);
+          //add incidents to the top panel
+          instance.addIncidents(credentials);
+
+          instance.refresh.setText("Refresh");
+        }
+        catch (IOException e) {
+          instance.showInvalidInformation(project);
+        }
+      }
+    });
   }
 
   /**
-   * Hides the refresh label
+   * Displays a notification in the top panel below the logged-in user
+   * @param text The text to display in the notification
    */
-  public static void hideRefreshLabel() {
-    instance.refreshLabel.setVisible(false);
+  public static void showNotification(String text) {
+    /*JBLabel titleLabel = new JBLabel("There was a problem. Please refer to the event log inside the SpiraTeam application");
+    Font font = titleLabel.getFont();
+    //set the font size
+    font = font.deriveFont((float)20);
+    titleLabel.setFont(font);
+    panel.add(titleLabel);*/
+
+    JBLabel topErrorMessage = new JBLabel(text);
+    //add a listener to disappear on click
+    topErrorMessage.addMouseListener(new DisappearListener(instance.topInformationPanel, topErrorMessage));
+    //create empty space between them
+    instance.topInformationPanel.add(Box.createRigidArea(new Dimension(0,5)));
+    instance.topInformationPanel.add(topErrorMessage);
+    instance.topInformationPanel.updateUI();
+
+    //have the UI update
+    instance.bottomPanel.updateUI();
   }
+
 
   /**
    * Shows the screen which informs the user that their credentials are invalid
@@ -132,18 +186,30 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //clear both panels
     topPanel.removeAll();
     bottomPanel.removeAll();
+    //reset all panels and buttons
+    refresh = null;
+    requirements = null;
+    tasks = null;
+    incidents = null;
+    topInformationPanel = null;
 
-    topPanel.add(new JBLabel("<html><h2>Not what you were looking for?</h2></html>"));
-    topPanel.add(new JBLabel("Your authentication credentials may be wrong."));
-    topPanel.add(new JBLabel("Please verify them by clicking the button below"));
+    invalidInformationPanel = new JBPanel();
+    invalidInformationPanel.setBorder(new EmptyBorder(0,0,0,0));
+    invalidInformationPanel.setLayout(new BoxLayout(invalidInformationPanel, BoxLayout.Y_AXIS));
+
+    invalidInformationPanel.add(new JBLabel("<html><h2>Not what you were looking for?</h2></html>"));
+    invalidInformationPanel.add(new JBLabel("Your authentication credentials may be wrong."));
+    invalidInformationPanel.add(new JBLabel("Please verify them by clicking the button below"));
+    invalidInformationPanel.add(new JBLabel("And check your URL (e.g. that it starts with http:// or https://)"));
     JButton button = new JButton("View Credentials");
     button.addActionListener(l -> {
       SpiraTeamLoginDialog dialog = new SpiraTeamLoginDialog(project, ServiceManager.getService(SpiraTeamCredentials.class));
       dialog.show();
     });
-    topPanel.add(button);
+    invalidInformationPanel.add(button);
     //update the changes
-    topPanel.updateUI();
+    invalidInformationPanel.updateUI();
+    topPanel.add(invalidInformationPanel);
     bottomPanel.updateUI();
   }
 
@@ -232,50 +298,85 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    * @param credentials
    */
   private void showTopInformation(Project project, SpiraTeamCredentials credentials) {
-    //panel which will contain information and various buttons
-    JBPanel panel = new JBPanel();
-    panel.setAlignmentX(0);
-    //have the panel lay out its children horizontally
-    LayoutManager layout = new BoxLayout(panel, BoxLayout.X_AXIS);
-    panel.setLayout(layout);
-    panel.setBorder(new EmptyBorder(0,0,0,0));
+    //create the panel if it does not exist
+    if(topInformationPanel == null) {
+      //panel which will contain information and various buttons
+      topInformationPanel = new JBPanel();
+      topInformationPanel.setAlignmentX(0);
+      //have the panel lay out its children horizontally
+      topInformationPanel.setLayout(new BoxLayout(topInformationPanel, BoxLayout.Y_AXIS));
+      topInformationPanel.setBorder(new EmptyBorder(0,0,0,0));
+      topInformationPanel.setAlignmentX(0);
+      topInformationPanel.setAlignmentY(0);
 
-    //show who is signed in
-    JBLabel signedInText = new JBLabel("Signed in as: ");
-    panel.add(signedInText);
-    //clickable label
-    JBLabel signedInUser = new JBLabel(credentials.getUsername());
-    signedInUser.addMouseListener(new UsernameListener(credentials, project, signedInUser));
-    panel.add(signedInUser);
+      //panel which contains the buttons at the top
+      JBPanel buttonPanel = new JBPanel();
+      buttonPanel.setAlignmentX(0);
+      buttonPanel.setAlignmentY(0);
+      buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+      buttonPanel.setBorder(new EmptyBorder(0,0,0,0));
+      //click on button to refresh from server
+      refresh = new JButton("Refresh");
+      refresh.setAlignmentX(0);
+      //on button clicked
+      refresh.addActionListener(l -> {
+        //reload the tool window
+        reload(project);
+      });
+      buttonPanel.add(refresh);
+      JButton home = new JButton("Home");
+      home.setAlignmentX(0);
+      //open My Page in browser when clicked
+      home.addActionListener(l -> {
+        //create the MyPage URL
+        URI myPage = SpiraTeamUtil.getMyPageURL(credentials);
+        //open the URL
+        SpiraTeamUtil.openURL(myPage);
+      });
+      //add the button to the panel
+      buttonPanel.add(home);
 
-    //click on button to refresh from server
-    JButton refresh = new JButton("Refresh");
-    //on button clicked
-    refresh.addActionListener(l -> {
-      //reload the tool window
-      reload(project);
-    });
-    panel.add(refresh);
-    JButton home = new JButton("Home");
-    //open My Page in browser when clicked
-    home.addActionListener(l -> {
-      //create the MyPage URL
-      URI myPage = SpiraTeamUtil.getMyPageURL(credentials);
-      //open the URL
-      SpiraTeamUtil.openURL(myPage);
-    });
-    //add the button to the panel
-    panel.add(home);
+      JButton newArtifact = new JButton("New");
+      newArtifact.setAlignmentX(0);
+      newArtifact.addActionListener(l -> {
+        SpiraTeamNewArtifactDialog artifact = new SpiraTeamNewArtifactDialog(project, credentials);
+        artifact.show();
+      });
+      buttonPanel.add(newArtifact);
+      topInformationPanel.add(buttonPanel);
 
-    JButton newArtifact = new JButton("New");
-    newArtifact.addActionListener(l -> {
-      SpiraTeamNewArtifactDialog artifact = new SpiraTeamNewArtifactDialog(project, credentials);
-      artifact.show();
-    });
-    panel.add(newArtifact);
+      //panel which contains the signed-in user
+      JBPanel signedIn = new JBPanel();
+      signedIn.setBorder(new EmptyBorder(0,0,0,0));
+      signedIn.setLayout(new BoxLayout(signedIn, BoxLayout.X_AXIS));
+      signedIn.setAlignmentX(0);
+      signedIn.setAlignmentY(0);
+      //show who is signed in
+      JBLabel signedInText = new JBLabel("Signed in as: ");
+      signedInText.setAlignmentX(0);
+      signedIn.add(signedInText);
+      //clickable label
+      JBLabel signedInUser = new JBLabel(credentials.getUsername());
+      signedInUser.setAlignmentX(0);
+      signedInUser.addMouseListener(new UsernameListener(credentials, project, signedInUser));
+      signedIn.add(signedInUser);
 
-    //add the now populated panel to the top
-    topPanel.add(panel);
+      date = new Date();
+      //the format to provide the date in
+      dateFormat = new SimpleDateFormat("MM/dd HH:mm");
+
+      dateRefreshed = new JBLabel("Last refreshed: " + dateFormat.format(date));
+      //make the color more transparent
+      dateRefreshed.setForeground(UIUtil.getHeaderInactiveColor());
+      //add spacing
+      signedIn.add(Box.createRigidArea(new Dimension(10,0)));
+      signedIn.add(dateRefreshed);
+
+      topInformationPanel.add(signedIn);
+
+      //add the information panel to the top panel
+      topPanel.add(topInformationPanel);
+    }
   }
 
   /**
@@ -324,6 +425,28 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    * Performs a REST call and adds all requirements to {@code topPanel}
    */
   private void addRequirements(SpiraTeamCredentials credentials) throws IOException {
+    if(requirements == null) {
+      //create a panel which will fit under the big requirementsLabel
+      requirements = new JBPanel();
+      requirements.setBorder(new EmptyBorder(0, 10, 0, 0));
+      requirements.setLayout(new BoxLayout(requirements, BoxLayout.Y_AXIS));
+      requirements.setVisible(false);
+      requirements.setAlignmentX(0);
+
+      //requirements 'parent' label
+      JBLabel requirementsLabel = new JBLabel("<html><h2>Requirements</h2></html>");
+      requirementsLabel.setAlignmentX(0);
+      //add a TreeListener to the label, passing in the panel
+      //this listener shows the requirements panel when the requirements label is pressed
+      requirementsLabel.addMouseListener(new TreeListener(requirements, requirementsLabel));
+      //add the title to the panel
+      topPanel.add(requirementsLabel);
+      topPanel.add(requirements);
+    }
+    else {
+      //clear the panel, to repopulate it
+      requirements.removeAll();
+    }
     Gson gson = new Gson();
     //getAssignedRequirements returns an InputStream with the JSON from the REST request, that is then read by the JsonReader
     JsonReader jsonReader = new JsonReader(new InputStreamReader(SpiraTeamUtil.getAssignedRequirements(credentials)));
@@ -331,18 +454,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     List<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
     //only show requirements if there are any assigned to the user
     if(list.size() > 0) {
-      //title label for requirements
-      JBLabel requirementsLabel = new JBLabel("<html><h2>Requirements</h2></html>");
-      //add the label to the top panel
-      topPanel.add(requirementsLabel);
-      //panel which fits under the "Requirements" label which will contain artifact names
-      JBPanel requirements = new JBPanel();
-      //make the new panel have no border
-      requirements.setBorder(new EmptyBorder(0, 10, 0, 0));
-      //make the panel lay out its children vertically
-      requirements.setLayout(new BoxLayout(requirements, BoxLayout.Y_AXIS));
-      //add the new panel to the top panel
-      topPanel.add(requirements);
       //loop through every LinkedTreeMap in list
       for (LinkedTreeMap map : list) {
         //get the ProjectId, cast it to a double and get its int value
@@ -363,6 +474,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         artifact.setDescription(description);
         artifact.setStatus(status);
         JBLabel label = new JBLabel(name);
+        label.setAlignmentX(0);
         //allow the user to click the label
         label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
         requirements.add(label);
@@ -374,8 +486,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
           showInformation(artifact, credentials, label);
         }
       }
-      //allow the user to click on the big requirement label to expand/collapse the artifact names
-      requirementsLabel.addMouseListener(new TreeListener(requirements, requirementsLabel));
     }
   }
 
@@ -383,6 +493,28 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    * Performs a REST call and adds all tasks to {@code topPanel}
    */
   private void addTasks(SpiraTeamCredentials credentials) throws IOException {
+    if(tasks == null) {
+      //create a panel which will fit under the big tasksLabel
+      tasks = new JBPanel();
+      tasks.setBorder(new EmptyBorder(0, 10, 0, 0));
+      tasks.setLayout(new BoxLayout(tasks, BoxLayout.Y_AXIS));
+      tasks.setVisible(false);
+      tasks.setAlignmentX(0);
+
+      //tasks 'parent' label
+      JBLabel tasksLabel = new JBLabel("<html><h2>Tasks</h2></html>");
+      tasksLabel.setAlignmentX(0);
+      //add a TreeListener to the label, passing in the panel
+      //this listener shows the tasks panel when the tasks label is pressed
+      tasksLabel.addMouseListener(new TreeListener(tasks, tasksLabel));
+      //add the title to the panel
+      topPanel.add(tasksLabel);
+      topPanel.add(tasks);
+    }
+    else {
+      //clear the panel, to repopulate it
+      tasks.removeAll();
+    }
     Gson gson = new Gson();
     //getAssignedRequirements returns an InputStream with the JSON from the REST request, that is then read by the JsonReader
     JsonReader jsonReader = new JsonReader(new InputStreamReader(SpiraTeamUtil.getAssignedTasks(credentials)));
@@ -390,12 +522,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
     //only add if there are assigned tasks
     if(list.size() > 0) {
-      JBLabel tasksLabel = new JBLabel("<html><h2>Tasks</h2></html>");
-      topPanel.add(tasksLabel);
-      JBPanel tasks = new JBPanel();
-      tasks.setBorder(new EmptyBorder(0, 10, 0, 0));
-      tasks.setLayout(new BoxLayout(tasks, BoxLayout.Y_AXIS));
-      topPanel.add(tasks);
       //loop through every map in list
       for (LinkedTreeMap map : list) {
         int projectId = ((Double)map.get("ProjectId")).intValue();
@@ -415,6 +541,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         artifact.setStatus(status);
         artifact.setType(type);
         JBLabel label = new JBLabel(name);
+        label.setAlignmentX(0);
         //allow the user to click on the label
         label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
         tasks.add(label);
@@ -426,8 +553,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
           showInformation(artifact, credentials, label);
         }
       }
-      //enable expand/collapse features
-      tasksLabel.addMouseListener(new TreeListener(tasks, tasksLabel));
     }
   }
 
@@ -435,24 +560,38 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    * Performs a REST call and adds all incidents to {@code topPanel}
    */
   private void addIncidents(SpiraTeamCredentials credentials) throws IOException {
+    if(incidents == null) {
+      //create a panel which will fit under the big incidentsLabel
+      incidents = new JBPanel();
+      //make the panel have no border
+      incidents.setBorder(new EmptyBorder(0, 10, 0, 0));
+      //make the panel lay out its children horizontally
+      incidents.setLayout(new BoxLayout(incidents, BoxLayout.Y_AXIS));
+      incidents.setVisible(false);
+      incidents.setAlignmentX(0);
+
+      //incidents 'parent' label
+      JBLabel incidentsLabel = new JBLabel("<html><h2>Incidents</h2></html>");
+      incidentsLabel.setAlignmentX(0);
+      //add a TreeListener to the label, passing in the panel
+      //this listener shows the incidents panel when the incidents label is pressed
+      incidentsLabel.addMouseListener(new TreeListener(incidents, incidentsLabel));
+      //add the title to the panel
+      topPanel.add(incidentsLabel);
+      topPanel.add(incidents);
+    }
+    else {
+      //clear the panel
+      incidents.removeAll();
+    }
     //create a new Gson object
     Gson gson = new Gson();
     //list which contain all of the information on incidents from the REST request
     List<LinkedTreeMap> list = SpiraTeamUtil.getAssignedIncidents(credentials);
     //only add incidents if there is at least one returned from the REST request
     if(list.size() > 0) {
-      //incidents 'parent' label
-      JBLabel incidentsLabel = new JBLabel("<html><h2>Incidents</h2></html>");
-      //add the title to the panel
-      topPanel.add(incidentsLabel);
-      //create a panel which will fit under the big incidentsLabel
-      JBPanel incidents = new JBPanel();
-      //make the panel have no border
-      incidents.setBorder(new EmptyBorder(0, 10, 0, 0));
-      //make the panel lay out its children horizontally
-      incidents.setLayout(new BoxLayout(incidents, BoxLayout.Y_AXIS));
-      //add the incidents panel to the main top panel
-      topPanel.add(incidents);
+
+
       //for each LinkedTreeMap in list
       for (LinkedTreeMap map : list) {
         //get the project Id, cast it to a double and get its integer value
@@ -480,6 +619,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
         artifact.setType(type);
         //create a label which says the name of the artifact
         JBLabel label = new JBLabel(name);
+        label.setAlignmentX(0);
         //add a listener, see the LabelMouseListener class below
         label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
         //add the label to the incidents panel
@@ -492,9 +632,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
           showInformation(artifact, credentials, label);
         }
       }
-      //add a TreeListener (see below) to the label, passing in the panel
-      //this listener shows the incidents panel when the incidents label is pressed
-      incidentsLabel.addMouseListener(new TreeListener(incidents, incidentsLabel));
     }
   }
 }

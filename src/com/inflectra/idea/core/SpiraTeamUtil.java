@@ -23,7 +23,6 @@ import com.inflectra.idea.core.model.*;
 import com.inflectra.idea.core.model.artifacts.Artifact;
 import com.inflectra.idea.core.model.artifacts.ArtifactType;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;
 import java.io.*;
 import java.net.*;
@@ -144,9 +143,11 @@ public class SpiraTeamUtil {
    * @throws IOException If the URL is invalid
    */
   public static List<LinkedTreeMap> getAssignedIncidents(SpiraTeamCredentials credentials) throws IOException {
+    //get the user id
+    int userId = getUserInformation(credentials).getUserId();
     //TODO: Update to use the /incidents REST request when Version 5.3 is released
     //the body of the request
-    String body = "[{\"PropertyName\": \"OwnerId\", \"IntValue\": 1}, {\"PropertyName\": \"IncidentStatusId\", \"IntValue\": -2}]";
+    String body = "[{\"PropertyName\": \"OwnerId\", \"IntValue\": " + userId + "}, {\"PropertyName\": \"IncidentStatusId\", \"IntValue\": -2}]";
     //the list to be returned
     ArrayList<LinkedTreeMap> out = new ArrayList<>();
     //get all of the projects available to the user
@@ -169,6 +170,36 @@ public class SpiraTeamUtil {
       }
     }
     return out;
+  }
+
+  /**
+   * @param credentials
+   * @return The currently authenticated user
+   */
+  public static SpiraTeamUser getUserInformation(SpiraTeamCredentials credentials) {
+    String url = credentials.getUrl() + restServiceUrl + "users?username="
+    + credentials.getUsername() + "&api-key=" + credentials.getToken();
+    try {
+      //perform the REST request
+      BufferedReader reader = new BufferedReader(new InputStreamReader(httpGet(url)));
+      Gson gson = new Gson();
+      //turn json into readable information
+      LinkedTreeMap map = gson.fromJson(reader, LinkedTreeMap.class);
+      String fullName = (String) map.get("FullName");
+      int userId = ((Double)map.get("UserId")).intValue();
+      String username = credentials.getUsername();
+      //we don't care about the role in this instance
+      int roleId = -1;
+
+      //create the user
+      SpiraTeamUser user = new SpiraTeamUser(fullName, userId, username, roleId);
+      return user;
+    }
+    catch(IOException e) {
+      //should never happen
+      e.printStackTrace();
+    }
+    return null;
   }
 
   /**
@@ -534,25 +565,11 @@ public class SpiraTeamUtil {
    * @param body The properties specified to add to the requirement
    * @param projectId The project to create the requirement in
    */
-  public static void createRequirement(SpiraTeamCredentials credentials, String body, int projectId) {
-    try {
+  public static InputStream createRequirement(SpiraTeamCredentials credentials, String body, int projectId) throws IOException {
       String url = credentials.getUrl() + restServiceUrl + "projects/" + projectId +
-      "/requirements?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
-      //post the new requirement, and store the result
-      InputStream inputStream = httpPost(url, body);
-      //enable reading of the input stream
-      BufferedReader stream = new BufferedReader(new InputStreamReader(inputStream));
-      //create the gson object
-      Gson gson = new Gson();
-      LinkedTreeMap jsonMap = gson.fromJson(stream, LinkedTreeMap.class);
-      if(jsonMap.containsKey("Message")) {
-        System.out.println("Invalid action");
-      }
-    }
-    catch(IOException e) {
-      e.printStackTrace();
-      //should never happen
-    }
+                   "/requirements?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
+    //post the new requirement, and store the result
+    return httpPost(url, body);
   }
 
   /**
@@ -561,17 +578,11 @@ public class SpiraTeamUtil {
    * @param body The properties specified to add
    * @param projectId The project to create the task in
    */
-  public static void createTask(SpiraTeamCredentials credentials, String body, int projectId) {
-    try {
-      String url = credentials.getUrl() + restServiceUrl + "projects/" + projectId +
-      "/tasks?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
-      //post the new task
-      httpPost(url, body);
-    }
-    catch(IOException e) {
-      e.printStackTrace();
-      //should never happen
-    }
+  public static InputStream createTask(SpiraTeamCredentials credentials, String body, int projectId) throws IOException {
+    String url = credentials.getUrl() + restServiceUrl + "projects/" + projectId +
+                 "/tass?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
+    //post the new task
+    return httpPost(url, body);
   }
 
   /**
@@ -580,17 +591,11 @@ public class SpiraTeamUtil {
    * @param body The properties specified to add
    * @param projectId The project to create the task in
    */
-  public static void createIncident(SpiraTeamCredentials credentials, String body, int projectId) {
-    try {
-      String url = credentials.getUrl() + restServiceUrl + "projects/" + projectId +
-                   "/incidents?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
-      //post the new task
-      httpPost(url, body);
-    }
-    catch(IOException e) {
-      e.printStackTrace();
-      //should never happen
-    }
+  public static InputStream createIncident(SpiraTeamCredentials credentials, String body, int projectId) throws IOException{
+    String url = credentials.getUrl() + restServiceUrl + "projects/" + projectId +
+                 "/incidents?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
+    //post the new task
+    return httpPost(url, body);
   }
 
   /**

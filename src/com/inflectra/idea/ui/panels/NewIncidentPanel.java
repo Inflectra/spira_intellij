@@ -34,8 +34,20 @@ import java.awt.*;
  */
 public class NewIncidentPanel extends NewArtifactPanel {
 
-  public NewIncidentPanel(SpiraTeamCredentials credentials, SpiraTeamProject project, String name, String description) {
+  public NewIncidentPanel(SpiraTeamCredentials credentials, SpiraTeamProject project, String name, String description, SpiraTeamUser[] user) {
     super(credentials, project.getProjectId(), name, description);
+    this.credentials = credentials;
+    this.users = user;
+
+    //get the active users in the current project
+    if (projectId != -1 && users == null) {
+      users = SpiraTeamUtil.getProjectUsers(credentials, projectId);
+    }
+    else if (users == null){
+      users = new SpiraTeamUser[1];
+      users[0] = new SpiraTeamUser("Please select a project", -1, "", -1);
+    }
+
     //panel which allows type and priority to be side-by-side
     JBPanel panel = new JBPanel();
     panel.setAlignmentX(0);
@@ -77,15 +89,6 @@ public class NewIncidentPanel extends NewArtifactPanel {
       priorityLabel.setAlignmentX(0);
       panel.add(priorityLabel);
 
-      //get the active users in the current project
-      SpiraTeamUser[] users;
-      if (projectId != -1) {
-        users = SpiraTeamUtil.getProjectUsers(credentials, projectId);
-      }
-      else {
-        users = new SpiraTeamUser[1];
-        users[0] = new SpiraTeamUser("Please select a project", -1, "", -1);
-      }
       owner = new ComboBox<>(users);
       owner.setAlignmentX(0);
       //set the default selected user to the one currently signed in
@@ -116,7 +119,7 @@ public class NewIncidentPanel extends NewArtifactPanel {
   }
 
   public NewIncidentPanel(SpiraTeamCredentials credentials, SpiraTeamProject project) {
-    this(credentials, project, "", "");
+    this(credentials, project, "", "", null);
   }
 
 

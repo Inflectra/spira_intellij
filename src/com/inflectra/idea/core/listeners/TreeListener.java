@@ -57,8 +57,6 @@ public class TreeListener implements MouseListener {
    */
   @Override
   public void mouseClicked(MouseEvent e) {
-    //hide the refresh label
-    SpiraToolWindowFactory.hideRefreshLabel();
     //hide the list if it is already expanded
     if (isExpanded) {
       //hide the artifacts

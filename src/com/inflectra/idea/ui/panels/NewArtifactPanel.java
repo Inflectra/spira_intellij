@@ -42,6 +42,7 @@ public abstract class NewArtifactPanel extends JBPanel {
   protected JBTextField nameField;
   protected ComboBox<SpiraTeamUser> owner;
   protected ComboBox<SpiraTeamPriority> priority;
+  protected SpiraTeamUser[] users;
   protected JTextArea descriptionArea;
   protected int projectId;
 
@@ -96,6 +97,14 @@ public abstract class NewArtifactPanel extends JBPanel {
     return "";
   }
 
+  public SpiraTeamUser[] getUsers() {
+    return users;
+  }
+
+  public JBTextField getNameField() {
+    return nameField;
+  }
+
   /**
    * @return The currently selected owner of the artifact
    */
@@ -121,8 +130,9 @@ public abstract class NewArtifactPanel extends JBPanel {
    * @return The description the user has entered
    */
   public String getDescription() {
-    if(descriptionArea != null)
-      return descriptionArea.getText();
+    if(descriptionArea != null) {
+      return descriptionArea.getText().replace("\t", "");
+    }
     return "";
   }
 

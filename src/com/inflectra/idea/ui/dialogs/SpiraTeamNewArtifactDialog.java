@@ -19,6 +19,7 @@ import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
 import com.inflectra.idea.core.model.SpiraTeamProject;
 import com.inflectra.idea.core.model.SpiraTeamProjectRole;
+import com.inflectra.idea.core.model.SpiraTeamUser;
 import com.inflectra.idea.core.model.artifacts.ArtifactType;
 import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.inflectra.idea.ui.panels.NewArtifactPanel;
@@ -35,6 +36,8 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -215,7 +218,11 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     else if(artifactPanel.getProjectId() != projectId.getProjectId() || artifactPanel.getArtifactType() != ArtifactType.REQUIREMENT){
       String name = artifactPanel.getArtifactName();
       String description = artifactPanel.getDescription();
-      artifactPanel = new NewRequirementPanel(credentials, projectId, name, description);
+      SpiraTeamUser[] users = null;
+      //only keep users if the project is the same
+      if(artifactPanel.getProjectId() == projectId.getProjectId())
+        users = artifactPanel.getUsers();
+      artifactPanel = new NewRequirementPanel(credentials, projectId, name, description, users);
     }
     //add the panel to the dialog
     panel.add(artifactPanel);
@@ -234,7 +241,11 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     else if(artifactPanel.getProjectId() != projectId.getProjectId() || artifactPanel.getArtifactType() != ArtifactType.TASK){
       String name = artifactPanel.getArtifactName();
       String description = artifactPanel.getDescription();
-      artifactPanel = new NewTaskPanel(credentials, projectId, name, description);
+      SpiraTeamUser[] users = null;
+      //only keep users if the project is the same
+      if(artifactPanel.getProjectId() == projectId.getProjectId())
+        users = artifactPanel.getUsers();
+      artifactPanel = new NewTaskPanel(credentials, projectId, name, description, users);
     }
     //add the panel to the dialog
     panel.add(artifactPanel);
@@ -253,7 +264,11 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     else if(artifactPanel.getProjectId() != projectId.getProjectId() || artifactPanel.getArtifactType() != ArtifactType.INCIDENT){
       String name = artifactPanel.getArtifactName();
       String description = artifactPanel.getDescription();
-      artifactPanel = new NewIncidentPanel(credentials, projectId, name, description);
+      SpiraTeamUser[] users = null;
+      //only keep users if the project is the same
+      if(artifactPanel.getProjectId() == projectId.getProjectId())
+        users = artifactPanel.getUsers();
+      artifactPanel = new NewIncidentPanel(credentials, projectId, name, description, users);
     }
     //add the panel to the dialog
     panel.add(artifactPanel);
@@ -271,6 +286,9 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     else if(type == ArtifactType.PLACERHOLDER) {
       return new ValidationInfo("You must choose a type to create", typeSelection);
     }
+    else if(artifactPanel.getArtifactName() == null || artifactPanel.getArtifactName().trim().equals("")) {
+      return new ValidationInfo("You must enter a name", artifactPanel.getNameField());
+    }
     return null;
   }
 
@@ -279,78 +297,87 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
    */
   @Override
   protected void doOKAction() {
-    //store the projectId for future use
-    credentials.setLastCreatedProjectId(projectId.getProjectId());
-    if(type == ArtifactType.REQUIREMENT) {
-      credentials.setLastCreatedArtifactType(ArtifactType.REQUIREMENT);
-      NewRequirementPanel requirementPanel = (NewRequirementPanel) artifactPanel;
-      //create the body of the request
-      String body = "{\"Name\": \"" + requirementPanel.getArtifactName() + "\"" +
-      ", \"RequirementTypeId\": " + requirementPanel.getSelectedArtifactType().getTypeId() +
-      ", \"Description\": \"" + requirementPanel.getDescription() + "\"";
-      int userId = requirementPanel.getSelectedOwner().getUserId();
-      //only add the owner if it is not -1, which is assigned if the user makes no choice
-      if(userId != -1) {
-        body += ", \"OwnerId\": " + requirementPanel.getSelectedOwner().getUserId();
-      }
-      int priorityId = requirementPanel.getSelectedPriority().getPriorityId();
-      //only add the priority if it is not -1, which is assigned if the user makes no choice
-      if(priorityId != -1) {
-        body += ", \"ImportanceId\": " + requirementPanel.getSelectedPriority().getPriorityId();
-      }
+    InputStream inputStream = null;
+    try {
+      //store the projectId for future use
+      credentials.setLastCreatedProjectId(projectId.getProjectId());
+      if (type == ArtifactType.REQUIREMENT) {
+        credentials.setLastCreatedArtifactType(ArtifactType.REQUIREMENT);
+        NewRequirementPanel requirementPanel = (NewRequirementPanel)artifactPanel;
+        //create the body of the request
+        String body = "{\"Name\": \"" + requirementPanel.getArtifactName() + "\"" +
+                      ", \"RequirementTypeId\": " + requirementPanel.getSelectedArtifactType().getTypeId() +
+                      ", \"Description\": \"" + requirementPanel.getDescription() + "\"";
+        int userId = requirementPanel.getSelectedOwner().getUserId();
+        //only add the owner if it is not -1, which is assigned if the user makes no choice
+        if (userId != -1) {
+          body += ", \"OwnerId\": " + requirementPanel.getSelectedOwner().getUserId();
+        }
+        int priorityId = requirementPanel.getSelectedPriority().getPriorityId();
+        //only add the priority if it is not -1, which is assigned if the user makes no choice
+        if (priorityId != -1) {
+          body += ", \"ImportanceId\": " + requirementPanel.getSelectedPriority().getPriorityId();
+        }
 
-      body += "}";
-      //create the requirement in the system
-      SpiraTeamUtil.createRequirement(credentials, body, projectId.getProjectId());
-    }
-    else if(type == ArtifactType.TASK) {
-      credentials.setLastCreatedArtifactType(ArtifactType.TASK);
-      NewTaskPanel taskPanel = (NewTaskPanel) artifactPanel;
-      //create the body of the request
-      String body = "{\"Name\": \"" + taskPanel.getArtifactName() + "\"" +
-      ", \"TaskTypeId\": " + taskPanel.getSelectedArtifactType().getTypeId() +
-      ", \"Description\": \"" + taskPanel.getDescription() + "\"";
-      int ownerId = taskPanel.getSelectedOwner().getUserId();
-      //only add the owner if it is not -1, which is assigned if the user makes no choice
-      if(ownerId != -1) {
-        body += ", \"OwnerId\": " + taskPanel.getSelectedOwner().getUserId();
+        body += "}";
+        //create the requirement in the system
+        inputStream = SpiraTeamUtil.createRequirement(credentials, body, projectId.getProjectId());
       }
-      int priorityId = taskPanel.getSelectedPriority().getPriorityId();
-      //only add the priority if it is not -1, which is assigned if the user makes no choice
-      if(priorityId != -1) {
-        body += ", \"TaskPriorityId\": " + taskPanel.getSelectedPriority().getPriorityId();
-      }
+      else if (type == ArtifactType.TASK) {
+        credentials.setLastCreatedArtifactType(ArtifactType.TASK);
+        NewTaskPanel taskPanel = (NewTaskPanel)artifactPanel;
+        //create the body of the request
+        String body = "{\"Name\": \"" + taskPanel.getArtifactName() + "\"" +
+                      ", \"TaskTypeId\": " + taskPanel.getSelectedArtifactType().getTypeId() +
+                      ", \"Description\": \"" + taskPanel.getDescription() + "\"";
+        int ownerId = taskPanel.getSelectedOwner().getUserId();
+        //only add the owner if it is not -1, which is assigned if the user makes no choice
+        if (ownerId != -1) {
+          body += ", \"OwnerId\": " + taskPanel.getSelectedOwner().getUserId();
+        }
+        int priorityId = taskPanel.getSelectedPriority().getPriorityId();
+        //only add the priority if it is not -1, which is assigned if the user makes no choice
+        if (priorityId != -1) {
+          body += ", \"TaskPriorityId\": " + taskPanel.getSelectedPriority().getPriorityId();
+        }
 
-      body += ", \"TaskStatusId\": 1";
-      //TODO: Add support for different task status ID's
-      body += "}";
-      //create the task in the system
-      SpiraTeamUtil.createTask(credentials, body, projectId.getProjectId());
-    }
-    else if(type == ArtifactType.INCIDENT) {
-      credentials.setLastCreatedArtifactType(ArtifactType.INCIDENT);
-      NewIncidentPanel incidentPanel = (NewIncidentPanel) artifactPanel;
-      //create the body of the request
-      String body = "{\"Name\": \"" + incidentPanel.getArtifactName() + "\"" +
-      ", \"IncidentTypeId\": " + incidentPanel.getSelectedArtifactType().getTypeId() +
-      ", \"Description\": \"" + incidentPanel.getDescription() + "\"";
-      int ownerId = incidentPanel.getSelectedOwner().getUserId();
-      //only add the owner if it is not -1, which is assigned if the user makes no choice
-      if(ownerId != -1) {
-        body += ", \"OwnerId\": " + incidentPanel.getSelectedOwner().getUserId();
+        body += ", \"TaskStatusId\": 1";
+        //TODO: Add support for different task status ID's
+        body += "}";
+        //create the task in the system
+        inputStream = SpiraTeamUtil.createTask(credentials, body, projectId.getProjectId());
       }
-      int priorityId = incidentPanel.getSelectedPriority().getPriorityId();
-      //only add the priority if it is not -1, which is assigned if the user makes no choice
-      if(priorityId != -1) {
-        body += ", \"PriorityId\": " + incidentPanel.getSelectedPriority().getPriorityId();
+      else if (type == ArtifactType.INCIDENT) {
+        credentials.setLastCreatedArtifactType(ArtifactType.INCIDENT);
+        NewIncidentPanel incidentPanel = (NewIncidentPanel)artifactPanel;
+        //create the body of the request
+        String body = "{\"Name\": \"" + incidentPanel.getArtifactName() + "\"" +
+                      ", \"IncidentTypeId\": " + incidentPanel.getSelectedArtifactType().getTypeId() +
+                      ", \"Description\": \"" + incidentPanel.getDescription() + "\"";
+        int ownerId = incidentPanel.getSelectedOwner().getUserId();
+        //only add the owner if it is not -1, which is assigned if the user makes no choice
+        if (ownerId != -1) {
+          body += ", \"OwnerId\": " + incidentPanel.getSelectedOwner().getUserId();
+        }
+        int priorityId = incidentPanel.getSelectedPriority().getPriorityId();
+        //only add the priority if it is not -1, which is assigned if the user makes no choice
+        if (priorityId != -1) {
+          body += ", \"PriorityId\": " + incidentPanel.getSelectedPriority().getPriorityId();
+        }
+        body += "}";
+        //create the incident in the system
+        inputStream = SpiraTeamUtil.createIncident(credentials, body, projectId.getProjectId());
       }
-      body+="}";
-      //create the incident in the system
-      SpiraTeamUtil.createIncident(credentials, body, projectId.getProjectId());
+      super.doOKAction();
+
+      //TODO: Append new artifact to respective panel without server call
+      //refresh the window
+      SpiraToolWindowFactory.reload(project);
+      SpiraToolWindowFactory.showNotification("New artifact successfully created!");
     }
-    super.doOKAction();
-    //refresh the window
-    SpiraToolWindowFactory.reload(project);
+    catch(IOException e) {
+      SpiraToolWindowFactory.showNotification("An error occurred. Please refer to your event log inside SpiraTeam for more information");
+    }
   }
 
 }
