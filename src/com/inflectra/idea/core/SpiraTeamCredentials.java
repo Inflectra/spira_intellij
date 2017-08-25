@@ -15,7 +15,7 @@
  */
 package com.inflectra.idea.core;
 
-import com.inflectra.idea.core.model.ArtifactType;
+import com.inflectra.idea.core.model.artifacts.ArtifactType;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
@@ -57,6 +57,14 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
      * The ID of the artifact that was last opened. Used to have an artifact open on startup or refresh
      */
     public int lastOpenArtifactId;
+    /**
+     * The type of artifact that was last created by the user. Default is placeholder
+     */
+    public ArtifactType lastCreatedArtifactType = ArtifactType.PLACERHOLDER;
+    /**
+     * The project Id that the user most recently added a new artifact to
+     */
+    public int lastCreatedProjectId;
 
     public State() {
 
@@ -105,7 +113,9 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
   public void setUsername(String username) {
     this.state.username = username;
   }
-
+  /**
+   * @return The RSS token
+   */
   public String getToken() {
     return state.token;
   }
@@ -136,6 +146,22 @@ public class SpiraTeamCredentials implements PersistentStateComponent<SpiraTeamC
 
   public void setLastOpenArtifactId(int artifactId) {
     this.state.lastOpenArtifactId = artifactId;
+  }
+
+  public int getLastCreatedProjectId() {
+    return state.lastCreatedProjectId;
+  }
+
+  public void setLastCreatedProjectId(int projectId) {
+    this.state.lastCreatedProjectId = projectId;
+  }
+
+  public ArtifactType getLastCreatedArtifactType() {
+    return this.state.lastCreatedArtifactType;
+  }
+
+  public void setLastCreatedArtifactType(ArtifactType type) {
+    this.state.lastCreatedArtifactType = type;
   }
 
   @Override

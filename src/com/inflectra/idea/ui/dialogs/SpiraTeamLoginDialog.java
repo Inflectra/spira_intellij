@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.inflectra.idea.ui;
+package com.inflectra.idea.ui.dialogs;
 
 import com.inflectra.idea.core.SpiraTeamCredentials;
+import com.inflectra.idea.core.model.artifacts.ArtifactType;
+import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
@@ -58,6 +60,7 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     out.setLayout(new BoxLayout(out, BoxLayout.Y_AXIS));
     //URL text field
     url = new JBTextField();
+    url.setAlignmentX(0);
     //show the URL stored in credentials if it exists
     if (credentials.getUrl() != null) {
       url.setText(credentials.getUrl());
@@ -66,7 +69,11 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     //add spacing between the label and the text field
     out.add(Box.createRigidArea(new Dimension(0, 3)));
     out.add(url);
+    //create spacing between them
+    out.add(Box.createRigidArea(new Dimension(0,10)));
+
     username = new JBTextField();
+    username.setAlignmentX(0);
     //show the username stored in credentials if it exists
     if (credentials.getUsername() != null) {
       username.setText(credentials.getUsername());
@@ -75,7 +82,11 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
     //add spacing between the label and the text field
     out.add(Box.createRigidArea(new Dimension(0, 3)));
     out.add(username);
+    //create spacing between them
+    out.add(Box.createRigidArea(new Dimension(0,10)));
+
     rssToken = new JBTextField();
+    rssToken.setAlignmentX(0);
     //show the RSS Token stored in credentials if it exists
     if (credentials.getToken() != null) {
       rssToken.setText(credentials.getToken());
@@ -93,6 +104,12 @@ public class SpiraTeamLoginDialog extends DialogWrapper {
    */
   @Override
   protected void doOKAction() {
+    //if the new username is different from the old one
+    if(credentials.getUsername() != null && !(credentials.getUsername().equals(url.getText()))) {
+      //reset the last created project and artifact type
+      this.credentials.setLastCreatedProjectId(-1);
+      this.credentials.setLastOpenArtifactType(ArtifactType.PLACERHOLDER);
+    }
     //need to store the new credentials
     this.credentials.setUrl(url.getText());
     this.credentials.setUsername(username.getText());

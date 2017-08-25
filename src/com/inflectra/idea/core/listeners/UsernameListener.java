@@ -16,7 +16,7 @@
 package com.inflectra.idea.core.listeners;
 
 import com.inflectra.idea.core.SpiraTeamCredentials;
-import com.inflectra.idea.ui.SpiraTeamLoginDialog;
+import com.inflectra.idea.ui.dialogs.SpiraTeamLoginDialog;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBLabel;
 

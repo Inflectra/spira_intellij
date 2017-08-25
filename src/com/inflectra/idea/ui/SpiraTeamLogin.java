@@ -16,6 +16,7 @@
 package com.inflectra.idea.ui;
 
 import com.inflectra.idea.core.SpiraTeamCredentials;
+import com.inflectra.idea.ui.dialogs.SpiraTeamLoginDialog;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;

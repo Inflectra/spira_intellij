@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.inflectra.idea.core.model;
+package com.inflectra.idea.ui;
 
-/**
- * Represents a Requirement in Spira
- * @author Peter Geertsema
- */
-public class Requirement extends Artifact {
+import com.inflectra.idea.core.SpiraTeamCredentials;
+import com.inflectra.idea.ui.dialogs.SpiraTeamNewArtifactDialog;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.components.ServiceManager;
 
-  public Requirement(int projectId, String projectName, int artifactId, String name, String priorityName) {
-    super(projectId, projectName, artifactId, ArtifactType.REQUIREMENT, name, priorityName);
+public class SpiraTeamNewArtifact extends AnAction {
+
+  @Override
+  public void actionPerformed(AnActionEvent e) {
+    SpiraTeamNewArtifactDialog newArtifact = new SpiraTeamNewArtifactDialog(e.getProject(),
+    ServiceManager.getService(SpiraTeamCredentials.class));
+    newArtifact.show();
   }
 }

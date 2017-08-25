@@ -15,7 +15,7 @@
  */
 package com.inflectra.idea.ui;
 
-import com.inflectra.idea.core.model.Artifact;
+import com.inflectra.idea.core.model.artifacts.Artifact;
 import com.intellij.openapi.ui.popup.*;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.util.Processor;

@@ -16,12 +16,33 @@
 package com.inflectra.idea.core.model;
 
 /**
- * Represents a Task in Spira
+ * The type of requirement, task or incident example Bug, Change Request, etc
  * @author Peter Geertsema
  */
-public class Task extends Artifact {
+public class SpiraTeamArtifactType {
+  /**
+   * The ID of the type
+   */
+  int typeId;
+  /**
+   * The name of the type
+   */
+  String name;
+  public SpiraTeamArtifactType(int typeId, String name) {
+    this.typeId = typeId;
+    this.name = name;
+  }
 
-  public Task(int projectId, String projectName, int artifactId, String name, String priorityName) {
-    super(projectId, projectName, artifactId, ArtifactType.TASK, name, priorityName);
+  public int getTypeId() {
+    return typeId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }

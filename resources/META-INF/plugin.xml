@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.inflectra.SpiraTeam</id>
   <name>SpiraTeam Plugin</name>
-  <version>1.1</version>
+  <version>1.2</version>
   <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
 
   <description><![CDATA[
@@ -10,10 +10,11 @@
 
   <change-notes><![CDATA[
       <ul>
-        <li>Added a new section at the top of the tool window where users can go to their my page, refresh and re-authenticate</li>
-        <li>Plug-in will remember the last opened artifact through refreshes and restarts</li>
-        <li>Added a SpiraTeam section in the "Tools" menu</li>
-        <li>Fixed conflicting component names bug</li>
+        <li>Ability to add Requirements, Tasks and Incidents</li>
+        <li>Fixed an issue with HTTP connections</li>
+        <li>Smartened up the new item panel</li>
+        <li>Added a notification system</li>
+        <li>Performance enhances</li>
       </ul>
 
     ]]>
@@ -41,6 +42,7 @@
       <reference id="SpiraTeamLogin"/>
       <reference id="SpiraTeamRefresh"/>
       <reference id="SpiraTeamMyPage"/>
+      <reference id="SpiraTeamNewArtifact"/>
       <add-to-group group-id="ToolsMenu" anchor="first"/>
     </group>
 
@@ -55,6 +57,10 @@
     </action>
     <action id="SpiraTeamMyPage" class="com.inflectra.idea.ui.SpiraTeamGotoMyPage" text="My Page"
             description="Open the SpiraTeam home page in browser">
+      <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
+    </action>
+    <action id="SpiraTeamNewArtifact" class="com.inflectra.idea.ui.SpiraTeamNewArtifact" text="New Item"
+            description="Create a new item in SpiraTeam">
       <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
     </action>
   </actions>

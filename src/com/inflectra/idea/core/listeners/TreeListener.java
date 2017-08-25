@@ -15,6 +15,7 @@
  */
 package com.inflectra.idea.core.listeners;
 
+import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.util.ui.UIUtil;

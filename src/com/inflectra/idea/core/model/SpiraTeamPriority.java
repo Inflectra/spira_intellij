@@ -16,34 +16,34 @@
 package com.inflectra.idea.core.model;
 
 /**
- * Enum which contains the different artifact types
+ * Represents a priority in the SpiraTeam system
  * @author Peter Geertsema
  */
-public enum ArtifactType {
-  REQUIREMENT("Requirement"),
-  INCIDENT("Incident"),
-  TASK("Task");
+public class SpiraTeamPriority {
+  int priorityId;
+  String priorityName;
 
-  private String artifactName;
-
-  ArtifactType(String artifactName) {
-    this.artifactName = artifactName;
-  }
-
-  public String getArtifactName() {
-    return artifactName;
+  public SpiraTeamPriority(int priorityId, String priorityName){
+    this.priorityId = priorityId;
+    this.priorityName = priorityName;
   }
 
   /**
-   * @return The prefix of the artifact type, example IN for Incidents
+   * @return The name of this priority
    */
-  public String getPrefix() {
-    if(this == REQUIREMENT)
-      return "RQ";
-    if(this == INCIDENT)
-      return "IN";
-    if(this == TASK)
-      return "TK";
-    return null;
+  public String getPriorityName() {
+    return priorityName;
+  }
+
+  /**
+   * @return The ID of this priority
+   */
+  public int getPriorityId() {
+    return priorityId;
+  }
+
+  @Override
+  public String toString() {
+    return getPriorityName();
   }
 }

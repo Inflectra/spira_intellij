@@ -15,14 +15,9 @@
  */
 package com.inflectra.idea.core.listeners;
 
-import com.inflectra.idea.core.SpiraTeamCredentials;
-import com.inflectra.idea.core.model.artifacts.Artifact;
-import com.inflectra.idea.ui.SpiraToolWindowFactory;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -31,45 +26,44 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Allows users to click on labels and underlines the label when the user hovers over it
+ * Listener which will make a label disappear when clicked on
  * @author Peter Geertsema
  */
-public class TopLabelMouseListener implements MouseListener {
-  private Artifact artifact;
+public class DisappearListener implements MouseListener {
+  /**
+   * The label to disappear
+   */
   private JBLabel label;
   /**
-   * Used only to show information in the bottom panel when a label is clicked
+   * The panel to remove the label from
    */
-  private SpiraToolWindowFactory window;
-  private SpiraTeamCredentials credentials;
+  private JBPanel panel;
 
-  public TopLabelMouseListener(Artifact artifact, JBLabel label, SpiraToolWindowFactory window, SpiraTeamCredentials credentials) {
-    this.artifact = artifact;
+  public DisappearListener(JBPanel panel, JBLabel label) {
+    this.panel = panel;
     this.label = label;
-    this.window = window;
-    this.credentials = credentials;
   }
 
   @Override
   public void mouseClicked(MouseEvent e) {
-    //show additional information on the artifact in the bottom panel
-    window.showInformation(artifact, credentials, label);
+    //remove the label from the panel
+    panel.remove(label);
+    //dont need to store the label or panel anymore
+    label = null;
+    panel.updateUI();
+    panel = null;
   }
 
   @Override
   public void mousePressed(MouseEvent e) {
-    //do nothing
+
   }
 
   @Override
   public void mouseReleased(MouseEvent e) {
-    //do nothing
+
   }
 
-  /**
-   * Create an underline on the panel when hovered over
-   * @param e
-   */
   @Override
   public void mouseEntered(MouseEvent e) {
     Font font = label.getFont();
@@ -83,26 +77,6 @@ public class TopLabelMouseListener implements MouseListener {
     label.setCursor(new Cursor(Cursor.HAND_CURSOR));
   }
 
-  /**
-   * @return A JBPanel with information regarding to the current artifact
-   * @deprecated Popups are no longer used by the SpiraTeam Plugin
-   */
-  private JBPanel createPanel() {
-    JBPanel panel = new JBPanel();
-    panel.setBorder(new EmptyBorder(5, 5, 5, 5));
-    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-    //contains the artifact prefix and ID as well as the project
-    JBLabel title = new JBLabel(artifact.getPrefix() + ":" + artifact.getArtifactId() + "   Project: " + artifact.getProjectName());
-    panel.add(title);
-    //contains the description, wrapped in html as Description supports rich text
-    panel.add(new JBLabel("<html>Description: " + artifact.getDescription() + "</html>"));
-    return panel;
-
-  }
-
-  /**
-   * Remove the underline
-   */
   @Override
   public void mouseExited(MouseEvent e) {
     Font font = label.getFont();
