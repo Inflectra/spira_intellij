@@ -48,7 +48,10 @@ public class DisappearListener implements MouseListener {
   public void mouseClicked(MouseEvent e) {
     //remove the label from the panel
     panel.remove(label);
+    //dont need to store the label or panel anymore
+    label = null;
     panel.updateUI();
+    panel = null;
   }
 
   @Override

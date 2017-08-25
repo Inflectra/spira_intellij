@@ -13,6 +13,8 @@
         <li>Ability to add Requirements, Tasks and Incidents</li>
         <li>Fixed an issue with HTTP connections</li>
         <li>Smartened up the new item panel</li>
+        <li>Added a notification system</li>
+        <li>Performance enhances</li>
       </ul>
 
     ]]>

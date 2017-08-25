@@ -64,10 +64,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
    */
   private JBLabel selectedLabel;
   /**
-   * The tool window which contains the information
-   */
-  private ToolWindow window;
-  /**
    * Click on button to refresh the window
    */
   private JButton refresh;
@@ -79,6 +75,11 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   private JBPanel requirements;
   private JBPanel tasks;
   private JBPanel incidents;
+
+  //labels which form the 'tree'
+  private JBLabel requirementsLabel;
+  private JBLabel incidentsLabel;
+  private JBLabel tasksLabel;
   /**
    * Contains the last time the window was refreshed
    */
@@ -96,7 +97,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
   /**
    * The current instance of SpiraToolWindowFactory
    */
-  private static SpiraToolWindowFactory instance;
+  public static SpiraToolWindowFactory instance;
 
   public SpiraToolWindowFactory() {
     instance = this;
@@ -127,6 +128,8 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     instance.date = new Date();
     instance.dateRefreshed.setText("Last refreshed: " + instance.dateFormat.format(instance.date));
     instance.refresh.setText("Refreshing...");
+
+    //must update the changes
     instance.topInformationPanel.updateUI();
     //clearing the bottom panel, and updating it if the artifact is no longer assigned to the user
     instance.bottomPanel.removeAll();
@@ -146,6 +149,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
           instance.addIncidents(credentials);
 
           instance.refresh.setText("Refresh");
+          showNotification("Successfully refreshed!");
         }
         catch (IOException e) {
           instance.showInvalidInformation(project);
@@ -170,7 +174,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //add a listener to disappear on click
     topErrorMessage.addMouseListener(new DisappearListener(instance.topInformationPanel, topErrorMessage));
     //create empty space between them
-    instance.topInformationPanel.add(Box.createRigidArea(new Dimension(0,5)));
     instance.topInformationPanel.add(topErrorMessage);
     instance.topInformationPanel.updateUI();
 
@@ -387,7 +390,6 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     //get the credentials from the IDE
     SpiraTeamCredentials credentials = ServiceManager.getService(SpiraTeamCredentials.class);
     //store the tool window for future use
-    this.window = window;
     try {
       if(credentials != null) {
         showTopInformation(project, credentials);
@@ -434,7 +436,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       requirements.setAlignmentX(0);
 
       //requirements 'parent' label
-      JBLabel requirementsLabel = new JBLabel("<html><h2>Requirements</h2></html>");
+      requirementsLabel = new JBLabel("<html><h2>Requirements</h2></html>");
       requirementsLabel.setAlignmentX(0);
       //add a TreeListener to the label, passing in the panel
       //this listener shows the requirements panel when the requirements label is pressed
@@ -454,38 +456,16 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     List<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
     //only show requirements if there are any assigned to the user
     if(list.size() > 0) {
+      //show the label
+      requirementsLabel.setVisible(true);
       //loop through every LinkedTreeMap in list
       for (LinkedTreeMap map : list) {
-        //get the ProjectId, cast it to a double and get its int value
-        int projectId = ((Double)map.get("ProjectId")).intValue();
-        int artifactId = ((Double)map.get("RequirementId")).intValue();
-        String priorityName = (String)map.get("ImportanceName");
-        String description = (String)map.get("Description");
-        String projectName = (String)map.get("ProjectName");
-        String name = (String)map.get("Name");
-        //workflow status name
-        String status = (String)map.get("StatusName");
-        String type = (String)map.get("RequirementTypeName");
-
-
-        //create an artifact with the fields from above
-        Artifact artifact = new Requirement(projectId, projectName, artifactId, name, priorityName);
-        //set the description of the artifact
-        artifact.setDescription(description);
-        artifact.setStatus(status);
-        JBLabel label = new JBLabel(name);
-        label.setAlignmentX(0);
-        //allow the user to click the label
-        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
-        requirements.add(label);
-        //create empty space between the artifacts
-        requirements.add(Box.createRigidArea(new Dimension(0,3)));
-        //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
-        //this allows artifacts to stay open through restarts and refreshes
-        if(credentials.getLastOpenArtifactType() == ArtifactType.REQUIREMENT && credentials.getLastOpenArtifactId() == artifactId) {
-          showInformation(artifact, credentials, label);
-        }
+        addArtifactToPanel(map, credentials);
       }
+    }
+    else {
+      //need to hide the label
+      requirementsLabel.setVisible(false);
     }
   }
 
@@ -502,7 +482,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       tasks.setAlignmentX(0);
 
       //tasks 'parent' label
-      JBLabel tasksLabel = new JBLabel("<html><h2>Tasks</h2></html>");
+      tasksLabel = new JBLabel("<html><h2>Tasks</h2></html>");
       tasksLabel.setAlignmentX(0);
       //add a TreeListener to the label, passing in the panel
       //this listener shows the tasks panel when the tasks label is pressed
@@ -522,37 +502,15 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
     ArrayList<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
     //only add if there are assigned tasks
     if(list.size() > 0) {
+      tasksLabel.setVisible(true);
       //loop through every map in list
       for (LinkedTreeMap map : list) {
-        int projectId = ((Double)map.get("ProjectId")).intValue();
-        int artifactId = ((Double)map.get("TaskId")).intValue();
-        String description = (String)map.get("Description");
-        String projectName = (String)map.get("ProjectName");
-        String priorityName = (String)map.get("TaskPriorityName");
-        String name = (String)map.get("Name");
-        String status = (String)map.get("TaskStatusName");
-        String type = (String)map.get("TaskTypeName");
-
-
-        //create an artifact with the fields from above
-        Artifact artifact = new Task(projectId, projectName, artifactId, name, priorityName);
-        //set the description
-        artifact.setDescription(description);
-        artifact.setStatus(status);
-        artifact.setType(type);
-        JBLabel label = new JBLabel(name);
-        label.setAlignmentX(0);
-        //allow the user to click on the label
-        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
-        tasks.add(label);
-        //create empty space between the artifacts
-        tasks.add(Box.createRigidArea(new Dimension(0,3)));
-        //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
-        //this allows artifacts to stay open through restarts and refreshes
-        if(credentials.getLastOpenArtifactType() == ArtifactType.TASK && credentials.getLastOpenArtifactId() == artifactId) {
-          showInformation(artifact, credentials, label);
-        }
+        addArtifactToPanel(map, credentials);
       }
+    }
+    else {
+      //need to hide the label
+      tasksLabel.setVisible(false);
     }
   }
 
@@ -571,7 +529,7 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       incidents.setAlignmentX(0);
 
       //incidents 'parent' label
-      JBLabel incidentsLabel = new JBLabel("<html><h2>Incidents</h2></html>");
+      incidentsLabel = new JBLabel("<html><h2>Incidents</h2></html>");
       incidentsLabel.setAlignmentX(0);
       //add a TreeListener to the label, passing in the panel
       //this listener shows the incidents panel when the incidents label is pressed
@@ -584,54 +542,120 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       //clear the panel
       incidents.removeAll();
     }
-    //create a new Gson object
-    Gson gson = new Gson();
     //list which contain all of the information on incidents from the REST request
     List<LinkedTreeMap> list = SpiraTeamUtil.getAssignedIncidents(credentials);
     //only add incidents if there is at least one returned from the REST request
     if(list.size() > 0) {
-
+      incidentsLabel.setVisible(true);
 
       //for each LinkedTreeMap in list
       for (LinkedTreeMap map : list) {
-        //get the project Id, cast it to a double and get its integer value
-        int projectId = ((Double)map.get("ProjectId")).intValue();
-        //get the incident Id, cast it to a double and get its integer value
-        //we call it artifact Id as it is a property in the Artifact class
-        int artifactId = ((Double)map.get("IncidentId")).intValue();
-        //get the description of the artifact
-        String description = (String)map.get("Description");
-        //get the project name of the artifact
-        String projectName = (String)map.get("ProjectName");
-        String priorityName = (String)map.get("PriorityName");
-        //the name of the artifact
-        String name = (String)map.get("Name");
-        String status = (String)map.get("IncidentStatusName");
-        //the type of incident ex bug, incident, etc
-        String type = (String)map.get("IncidentTypeName");
-
-
-        //create an artifact with the fields from above
-        Artifact artifact = new Incident(projectId, projectName, artifactId, name, priorityName);
-        //set the description
-        artifact.setDescription(description);
-        artifact.setStatus(status);
-        artifact.setType(type);
-        //create a label which says the name of the artifact
-        JBLabel label = new JBLabel(name);
-        label.setAlignmentX(0);
-        //add a listener, see the LabelMouseListener class below
-        label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
-        //add the label to the incidents panel
-        incidents.add(label);
-        //create empty space between the artifacts
-        incidents.add(Box.createRigidArea(new Dimension(0,3)));
-        //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
-        //this allows artifacts to stay open through restarts and refreshes
-        if(credentials.getLastOpenArtifactType() == ArtifactType.INCIDENT && credentials.getLastOpenArtifactId() == artifactId) {
-          showInformation(artifact, credentials, label);
-        }
+        addArtifactToPanel(map, credentials);
       }
     }
+    else {
+      incidentsLabel.setVisible(false);
+    }
+  }
+
+  /**
+   * Adds the information to the correct panel. Checks which panel to add to dynamically
+   * @param map Map which contains the information needed to add an artifact
+   */
+  public void addArtifactToPanel(LinkedTreeMap map, SpiraTeamCredentials credentials) {
+
+    //get common properties
+    //get the project name of the artifact
+    String projectName = (String)map.get("ProjectName");
+    //the name of the artifact
+    String name = (String)map.get("Name");
+    //get the description of the artifact
+    String description = (String)map.get("Description");
+    //get the project Id, cast it to a double and get its integer value
+    int projectId = ((Double)map.get("ProjectId")).intValue();
+
+    //if the artifact is a requirement
+    if(map.containsKey("RequirementTypeName")) {
+      int artifactId = ((Double)map.get("RequirementId")).intValue();
+      String priorityName = (String)map.get("ImportanceName");
+      //workflow status name
+      String status = (String)map.get("StatusName");
+      String type = (String)map.get("RequirementTypeName");
+
+      //create an artifact with the fields from above
+      Artifact artifact = new Requirement(projectId, projectName, artifactId, name, priorityName);
+      //set the description of the artifact
+      artifact.setDescription(description);
+      artifact.setStatus(status);
+      JBLabel label = new JBLabel(name);
+      label.setAlignmentX(0);
+      //allow the user to click the label
+      label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
+      requirements.add(label);
+      //create empty space between the artifacts
+      requirements.add(Box.createRigidArea(new Dimension(0,3)));
+      //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
+      //this allows artifacts to stay open through restarts and refreshes
+      if(credentials.getLastOpenArtifactType() == ArtifactType.REQUIREMENT && credentials.getLastOpenArtifactId() == artifactId) {
+        showInformation(artifact, credentials, label);
+      }
+    }
+    //if the artifact is an incident
+    else if(map.containsKey("IncidentTypeName")) {
+      //get the incident Id, cast it to a double and get its integer value
+      //we call it artifact Id as it is a property in the Artifact class
+      int artifactId = ((Double)map.get("IncidentId")).intValue();
+      String priorityName = (String)map.get("PriorityName");
+      String status = (String)map.get("IncidentStatusName");
+      //the type of incident ex bug, incident, etc
+      String type = (String)map.get("IncidentTypeName");
+      //create an artifact with the fields from above
+      Artifact artifact = new Incident(projectId, projectName, artifactId, name, priorityName);
+      //set the description
+      artifact.setDescription(description);
+      artifact.setStatus(status);
+      artifact.setType(type);
+      //create a label which says the name of the artifact
+      JBLabel label = new JBLabel(name);
+      label.setAlignmentX(0);
+      //add a listener, see the LabelMouseListener class below
+      label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
+      //add the label to the incidents panel
+      incidents.add(label);
+      //create empty space between the artifacts
+      incidents.add(Box.createRigidArea(new Dimension(0,3)));
+      //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
+      //this allows artifacts to stay open through restarts and refreshes
+      if(credentials.getLastOpenArtifactType() == ArtifactType.INCIDENT && credentials.getLastOpenArtifactId() == artifactId) {
+        showInformation(artifact, credentials, label);
+      }
+    }
+    //if the artifact is a task
+    else if(map.containsKey("TaskPriorityName")) {
+      int artifactId = ((Double)map.get("TaskId")).intValue();
+      String priorityName = (String)map.get("TaskPriorityName");
+      String status = (String)map.get("TaskStatusName");
+      String type = (String)map.get("TaskTypeName");
+
+      //create an artifact with the fields from above
+      Artifact artifact = new Task(projectId, projectName, artifactId, name, priorityName);
+      //set the description
+      artifact.setDescription(description);
+      artifact.setStatus(status);
+      artifact.setType(type);
+      JBLabel label = new JBLabel(name);
+      label.setAlignmentX(0);
+      //allow the user to click on the label
+      label.addMouseListener(new TopLabelMouseListener(artifact, label, this, credentials));
+      tasks.add(label);
+      //create empty space between the artifacts
+      tasks.add(Box.createRigidArea(new Dimension(0,3)));
+      //if the last opened artifact is the same as the one currently being built, show it in the bottom panel
+      //this allows artifacts to stay open through restarts and refreshes
+      if(credentials.getLastOpenArtifactType() == ArtifactType.TASK && credentials.getLastOpenArtifactId() == artifactId) {
+        showInformation(artifact, credentials, label);
+      }
+    }
+    topPanel.updateUI();
   }
 }

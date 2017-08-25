@@ -78,7 +78,7 @@ public abstract class NewArtifactPanel extends JBPanel {
    */
   protected void addDescription(String d) {
     //the description
-    JBLabel descriptionLabel = new JBLabel("Description: ");
+    JBLabel descriptionLabel = new JBLabel("Description (Plain Text Only):");
     descriptionLabel.setAlignmentX(0);
     add(descriptionLabel);
     descriptionArea = new JTextArea(d);

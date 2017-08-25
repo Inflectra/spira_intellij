@@ -15,6 +15,9 @@
  */
 package com.inflectra.idea.ui.dialogs;
 
+import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.stream.JsonReader;
 import com.inflectra.idea.core.SpiraTeamCredentials;
 import com.inflectra.idea.core.SpiraTeamUtil;
 import com.inflectra.idea.core.model.SpiraTeamProject;
@@ -38,6 +41,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 /**
@@ -107,6 +111,13 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
     SpiraTeamProject[] availableProjectsArray = new SpiraTeamProject[availableProjectsList.size() + 1];
     //empty project
     availableProjectsArray[0] = new SpiraTeamProject("-- Select Project --", -1);
+    //create a role with access to everything
+    SpiraTeamProjectRole selectRole = new SpiraTeamProjectRole();
+    selectRole.setCanCreateRequirement(true);
+    selectRole.setCanCreateIncident(true);
+    selectRole.setCanCreateTask(true);
+    availableProjectsArray[0].setUserRole(selectRole);
+
     int lastCreatedProjectIndex = 0;
     //have availableProjectsArray mirror that of availableProjectsList
     for(int i=0; i<availableProjectsList.size(); i++) {
@@ -371,8 +382,22 @@ public class SpiraTeamNewArtifactDialog extends DialogWrapper {
       super.doOKAction();
 
       //TODO: Append new artifact to respective panel without server call
-      //refresh the window
-      SpiraToolWindowFactory.reload(project);
+      //appending does not work due to incorrect information from the server on new artifact creation
+      Gson gson = new Gson();
+      //add ability to read from the input stream
+      JsonReader jsonReader = new JsonReader(new InputStreamReader(inputStream));
+      LinkedTreeMap map = gson.fromJson(jsonReader, LinkedTreeMap.class);
+      Object ownerObject = map.get("OwnerId");
+      //only do stuff if the owner is assigned
+      if(ownerObject != null) {
+        int ownerId = ((Double)ownerObject).intValue();
+        //only add the artifact if the owner owns it
+
+        //only refresh if the user owns it
+        if (SpiraTeamUtil.getUserInformation(credentials).getUserId() == ownerId) {
+          SpiraToolWindowFactory.reload(project);
+        }
+      }
       SpiraToolWindowFactory.showNotification("New artifact successfully created!");
     }
     catch(IOException e) {

@@ -580,7 +580,7 @@ public class SpiraTeamUtil {
    */
   public static InputStream createTask(SpiraTeamCredentials credentials, String body, int projectId) throws IOException {
     String url = credentials.getUrl() + restServiceUrl + "projects/" + projectId +
-                 "/tass?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
+                 "/tasks?username=" + credentials.getUsername() + "&api-key=" + credentials.getToken();
     //post the new task
     return httpPost(url, body);
   }
