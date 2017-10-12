@@ -25,7 +25,6 @@ import com.intellij.openapi.project.Project;
 
 /**
  * Action which allows the user to log into SpiraTeam
- * @author Peter Geertsema
  */
 public class SpiraTeamLogin extends AnAction {
 
