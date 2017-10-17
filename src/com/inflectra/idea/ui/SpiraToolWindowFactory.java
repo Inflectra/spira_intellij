@@ -542,18 +542,22 @@ public class SpiraToolWindowFactory implements ToolWindowFactory {
       //clear the panel
       incidents.removeAll();
     }
-    //list which contain all of the information on incidents from the REST request
-    List<LinkedTreeMap> list = SpiraTeamUtil.getAssignedIncidents(credentials);
-    //only add incidents if there is at least one returned from the REST request
+    Gson gson = new Gson();
+    //getAssignedIncidents returns an InputStream with the JSON from the REST request, that is then read by the JsonReader
+    JsonReader jsonReader = new JsonReader(new InputStreamReader(SpiraTeamUtil.getAssignedIncidents(credentials)));
+    //Turn the JSON into something java understands
+    List<LinkedTreeMap> list = gson.fromJson(jsonReader, ArrayList.class);
+    //only show incidents if there are any assigned to the user
     if(list.size() > 0) {
+      //show the label
       incidentsLabel.setVisible(true);
-
-      //for each LinkedTreeMap in list
+      //loop through every LinkedTreeMap in list
       for (LinkedTreeMap map : list) {
         addArtifactToPanel(map, credentials);
       }
     }
     else {
+      //need to hide the label
       incidentsLabel.setVisible(false);
     }
   }
