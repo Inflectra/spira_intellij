@@ -136,6 +136,20 @@ public class SpiraTeamUtil {
     //perform the GET request
     return httpGet(url);
   }
+  
+  
+  /**
+   * @param credentials The information needed to perform the HTTP request
+   * @return An InputStream containing JSON with all the incidents assigned to the user (works with 5.3+)
+   * @throws IOException If the URL is invalid
+   */
+  public static InputStream getAssignedIncidentsNew(SpiraTeamCredentials credentials) throws IOException {
+    //create the URL
+    String url = credentials.getUrl() + restServiceUrl + "incidents?username=" + credentials.getUsername() +
+                 "&api-key=" + credentials.getToken();
+    //perform the GET request
+    return httpGet(url);
+  }
 
   /**
    * @param credentials The information needed to perform the HTTP request
