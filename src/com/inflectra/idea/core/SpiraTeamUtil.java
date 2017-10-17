@@ -143,7 +143,7 @@ public class SpiraTeamUtil {
    * @return An InputStream containing JSON with all the incidents assigned to the user (works with 5.3+)
    * @throws IOException If the URL is invalid
    */
-  public static InputStream getAssignedIncidentsNew(SpiraTeamCredentials credentials) throws IOException {
+  public static InputStream getAssignedIncidents(SpiraTeamCredentials credentials) throws IOException {
     //create the URL
     String url = credentials.getUrl() + restServiceUrl + "incidents?username=" + credentials.getUsername() +
                  "&api-key=" + credentials.getToken();
@@ -151,41 +151,7 @@ public class SpiraTeamUtil {
     return httpGet(url);
   }
 
-  /**
-   * @param credentials The information needed to perform the HTTP request
-   * @return A list of all the Incidents, each Map represents an incident
-   * @throws IOException If the URL is invalid
-   */
-  public static List<LinkedTreeMap> getAssignedIncidents(SpiraTeamCredentials credentials) throws IOException {
-    //get the user id
-    int userId = getUserInformation(credentials).getUserId();
-    //TODO: Update to use the /incidents REST request when Version 5.3 is released
-    //the body of the request
-    String body = "[{\"PropertyName\": \"OwnerId\", \"IntValue\": " + userId + "}, {\"PropertyName\": \"IncidentStatusId\", \"IntValue\": -2}]";
-    //the list to be returned
-    ArrayList<LinkedTreeMap> out = new ArrayList<>();
-    //get all of the projects available to the user
-    List<SpiraTeamProject> projects = getAvailableProjects(credentials);
-    //loop through all of the available projects
-    for (SpiraTeamProject project : projects) {
-      //build the URL for each project
-      String url = credentials.getUrl() + restServiceUrl +
-                   "projects/" + project.getProjectId() + "/incidents/search" +
-                   "?start_row=1&number_rows=1000&sort_by=Priority&username=" + credentials.getUsername() +
-                   "&api-key=" + credentials.getToken();
-      //add ability to read from the InputStream
-      BufferedReader stream = new BufferedReader(new InputStreamReader(httpPost(url, body)));
-      Gson gson = new Gson();
-      //reading JSON from each project
-      ArrayList<LinkedTreeMap> list = gson.fromJson(new JsonReader(stream), ArrayList.class);
-      for (LinkedTreeMap map : list) {
-        //add each map to the final output list
-        out.add(map);
-      }
-    }
-    return out;
-  }
-
+ 
   /**
    * @param credentials
    * @return The currently authenticated user
