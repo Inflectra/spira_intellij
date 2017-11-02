@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.inflectra.SpiraTeam</id>
   <name>SpiraTeam Plugin</name>
-  <version>1.2</version>
+  <version>1.3</version>
   <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
 
   <description><![CDATA[
@@ -10,11 +10,8 @@
 
   <change-notes><![CDATA[
       <ul>
-        <li>Ability to add Requirements, Tasks and Incidents</li>
-        <li>Fixed an issue with HTTP connections</li>
-        <li>Smartened up the new item panel</li>
-        <li>Added a notification system</li>
-        <li>Performance enhances</li>
+        <li>Updated Plugin to be compatible with SpiraTeam version 5.3</li>
+        <li>Note that version 1.3 only works with SpiraTeam 5.3 and later</li>
       </ul>
 
     ]]>
