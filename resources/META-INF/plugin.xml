@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.inflectra.SpiraTeam</id>
-  <name>SpiraTeam Plugin</name>
-  <version>1.3</version>
+  <name>SpiraPlan Integration</name>
+  <version>1.4</version>
   <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
 
   <description><![CDATA[
@@ -10,14 +10,13 @@
 
   <change-notes><![CDATA[
       <ul>
-        <li>Updated Plugin to be compatible with SpiraTeam version 5.3</li>
-        <li>Note that version 1.3 only works with SpiraTeam 5.3 and later</li>
+        <li>Updated Plugin to be compatible with 2020+ JetBrains Products</li>
       </ul>
 
     ]]>
   </change-notes>
 
-  <idea-version since-build="145.0"/>
+  <idea-version since-build="201.0"/>
 
   <depends>com.intellij.modules.lang</depends>
 
