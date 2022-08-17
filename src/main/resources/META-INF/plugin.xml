@@ -1,0 +1,63 @@
+<idea-plugin>
+    <id>com.inflectra.SpiraTeam</id>
+    <name>SpiraPlan Integration</name>
+    <version>1.5</version>
+    <vendor email="support@inflectra.com" url="http://www.inflectra.com">Inflectra Corporation</vendor>
+
+    <description><![CDATA[
+      Plugin for SpiraTeam by Inflectra Corporation
+    ]]></description>
+
+    <change-notes><![CDATA[
+      <ul>
+        <li>Updated Plugin to be compatible with 2020+ JetBrains Products</li>
+      </ul>
+
+    ]]>
+    </change-notes>
+
+    <idea-version since-build="201.0" until-build="223.*"/>
+
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+        <toolWindow id="SpiraTeam" icon="/icons/spira-icon.png" anchor="right"
+                    factoryClass="inflectra.idea.ui.SpiraToolWindowFactory"/>
+    </extensions>
+    <application-components>
+        <component>
+            <implementation-class>inflectra.idea.core.SpiraTeamCredentials</implementation-class>
+            <interface-class>inflectra.idea.core.SpiraTeamCredentials</interface-class>
+        </component>
+    </application-components>
+
+    <actions>
+
+        <group id="SpiraTeam.ActiveToolbar" text="SpiraTeam" popup="true">
+            <!-- No need to reference an actions here, they are added to the group individually. -->
+
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </group>
+
+        <!-- Add your actions here -->
+        <action id="SpiraTeamLogin" class="inflectra.idea.ui.SpiraTeamLogin" text="Login"
+                description="Prompt to login to SpiraTeam">
+            <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
+        </action>
+        <action id="SpiraTeamRefresh" class="inflectra.idea.ui.SpiraTeamRefresh" text="Refresh"
+                description="Refresh the artifacts from SpiraTeam SpiraTeam">
+            <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="first"/>
+        </action>
+        <action id="SpiraTeamMyPage" class="inflectra.idea.ui.SpiraTeamGotoMyPage" text="My Page"
+                description="Open the SpiraTeam home page in browser">
+            <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
+        </action>
+        <action id="SpiraTeamNewArtifact" class="inflectra.idea.ui.SpiraTeamNewArtifact" text="New Item"
+                description="Create a new item in SpiraTeam">
+            <add-to-group group-id="SpiraTeam.ActiveToolbar" anchor="last"/>
+        </action>
+    </actions>
+
+
+</idea-plugin>
