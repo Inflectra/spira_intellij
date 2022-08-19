@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <idea-plugin>
     <id>com.inflectra.SpiraTeam</id>
     <name>SpiraPlan Integration</name>
@@ -10,7 +11,7 @@
 
     <change-notes><![CDATA[
       <ul>
-        <li>Updated Plugin to be compatible with 2020+ JetBrains Products</li>
+        <li>Updated Plugin to be compatible with 2022 JetBrains Products</li>
       </ul>
 
     ]]>
