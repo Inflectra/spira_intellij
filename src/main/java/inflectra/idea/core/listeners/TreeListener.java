@@ -30,8 +30,11 @@ import java.awt.event.MouseListener;
  * @author Peter Geertsema
  */
 public class TreeListener implements MouseListener {
-  private static String expandButton = "▶ ";
-  private static String collapseButton = "▼ ";
+  //These characters use UTF-8, java isn't loading the plugin as that for some reason
+  //private static String expandButton = "▶ ";
+  //private static String collapseButton = "▼ ";
+  private static String expandButton = "+ ";
+  private static String collapseButton = "- ";
   JBPanel panel;
   JBLabel label;
   boolean isExpanded = false;
@@ -43,7 +46,7 @@ public class TreeListener implements MouseListener {
     String text = label.getText();
     int startLoc = text.indexOf("<h2>") + 4;
     //add in the expand button, which is smaller than the rest of the text
-    text = text.substring(0, startLoc) + "<span style=\"font-size: .6em; font-family: Arial\">" + expandButton + "</span>" + text.substring(startLoc);
+    text = text.substring(0, startLoc) + "<span style=\"font-size: 1em; font-family: Arial\">" + expandButton + "</span>" + text.substring(startLoc);
     label.setText(text);
     //make the header color inactive by default
     Color color = UIUtil.getHeaderInactiveColor();
